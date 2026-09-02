@@ -1,5 +1,6 @@
 package Interfaz.reservas;
 
+import logic.Categoria;
 import logic.Funcionario;
 import logic.Recurso;
 import logic.Reserva;
@@ -9,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ControllerReserva {
@@ -56,14 +58,16 @@ public class ControllerReserva {
             LocalTime horaFin = LocalTime.parse(horaFinStr, FMT_HORA);
             if (!horaFin.isAfter(horaInicio)) throw new Exception("La hora de fin debe ser posterior a la hora de inicio.");
 
-            Reserva nueva = new Reserva(model.generarId(), titulo, fecha, horaInicio, horaFin, null, null, usuarioActual);
-
-            // Validar solapamiento
-            for (Reserva existente : model.getReservas()) {
-                if (existente.seSolapaCon(nueva)) {
-                    throw new Exception("Conflicto de horario: el recurso ya está reservado en ese horario.");
-                }
+            // Obtener las categorías seleccionadas desde la vista
+            List<Categoria> categoriasSeleccionadas = obtenerCategoriasSeleccionadas();
+            if (categoriasSeleccionadas.isEmpty()) {
+                throw new Exception("Debe seleccionar al menos una categoría de recursos.");
             }
+
+            // Asignar primer recurso libre de cada categoría
+            List<Recurso> recursosAsignados = model.asignarRecursosDisponibles(categoriasSeleccionadas, fecha, horaInicio, horaFin);
+
+            Reserva nueva = new Reserva(model.generarId(), titulo, fecha, horaInicio, horaFin, recursosAsignados, usuarioActual);
 
             model.guardar(nueva);
             actualizarTabla();
@@ -75,6 +79,15 @@ public class ControllerReserva {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Categoria> obtenerCategoriasSeleccionadas() {
+        List<Categoria> lista = new ArrayList<>();
+        if (view.getListaCategorias() != null) {
+            lista = view.getListaCategorias().getSelectedValuesList();
+        }
+        return lista;
     }
 
     private void cancelarSeleccionada() {

@@ -1,9 +1,11 @@
 package Interfaz.actividades;
 
+import logic.Recurso;
 import logic.Reserva;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TableModelActividades extends AbstractTableModel {
 
@@ -56,7 +58,12 @@ public class TableModelActividades extends AbstractTableModel {
             case ID:
                 return r.getId();
             case TITULO:
-                return r.getRecurso() != null ? r.getRecurso().getNombre() : "Sin asignar";
+                if (r.getRecursosAsignados() != null && !r.getRecursosAsignados().isEmpty()) {
+                    return r.getRecursosAsignados().stream()
+                            .map(Recurso::getNombre)
+                            .collect(Collectors.joining(", "));
+                }
+                return r.getTitulo() != null ? r.getTitulo() : "Sin asignar";
             case FECHA:
                 return r.getFecha() != null ? r.getFecha().toString() : "";
             default:

@@ -66,7 +66,8 @@ public class ModelCalendarizacion {
     public List<Reserva> getReservasPorCategoria(Categoria categoria) {
         if (categoria == null) return Collections.emptyList();
         return Data.getInstancia().getReservas().stream()
-                .filter(r -> r.getCategoria() != null && r.getCategoria().getId().equals(categoria.getId()))
+                .filter(r -> r.getCategoriasRequeridas() != null &&
+                        r.getCategoriasRequeridas().stream().anyMatch(c -> c.getId().equals(categoria.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -74,7 +75,8 @@ public class ModelCalendarizacion {
         if (fecha == null || categoria == null) return Collections.emptyList();
         return Data.getInstancia().getReservas().stream()
                 .filter(r -> r.getFecha() != null && r.getFecha().equals(fecha))
-                .filter(r -> r.getCategoria() != null && r.getCategoria().getId().equals(categoria.getId()))
+                .filter(r -> r.getCategoriasRequeridas() != null &&
+                        r.getCategoriasRequeridas().stream().anyMatch(c -> c.getId().equals(categoria.getId())))
                 .collect(Collectors.toList());
     }
 

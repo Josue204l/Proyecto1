@@ -5,9 +5,14 @@ import logic.Funcionario;
 import logic.Recurso;
 import logic.Reserva;
 
+import java.beans.DefaultPersistenceDelegate;
+import java.beans.Encoder;
+import java.beans.Expression;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public class XmlPersister {
@@ -41,6 +46,7 @@ public class XmlPersister {
         try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(archivo)))) {
             return (List<T>) decoder.readObject();
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -48,9 +54,35 @@ public class XmlPersister {
     private static void guardar(String ruta, Object objeto) {
         new File(DIR).mkdirs();
         try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(ruta)))) {
+            // Configurar delegates para que XMLEncoder reconozca LocalDate y LocalTime
+            configurarDelegates(encoder);
             encoder.writeObject(objeto);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Enseña a XMLEncoder cómo instanciar objetos LocalDate y LocalTime
+     * usando sus métodos estáticos parse() o de construcción directa.
+     */
+    private static void configurarDelegates(XMLEncoder encoder) {
+        // Delegate para LocalDate (se serializa guardando su método toString)
+        encoder.setPersistenceDelegate(LocalDate.class, new DefaultPersistenceDelegate() {
+            @Override
+            protected Expression instantiate(Object oldInstance, Encoder out) {
+                LocalDate date = (LocalDate) oldInstance;
+                return new Expression(date, LocalDate.class, "parse", new Object[]{date.toString()});
+            }
+        });
+
+        // Delegate para LocalTime (se serializa guardando su método toString)
+        encoder.setPersistenceDelegate(LocalTime.class, new DefaultPersistenceDelegate() {
+            @Override
+            protected Expression instantiate(Object oldInstance, Encoder out) {
+                LocalTime time = (LocalTime) oldInstance;
+                return new Expression(time, LocalTime.class, "parse", new Object[]{time.toString()});
+            }
+        });
     }
 }

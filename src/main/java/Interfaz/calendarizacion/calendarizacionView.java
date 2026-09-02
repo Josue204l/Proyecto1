@@ -1,16 +1,16 @@
 package Interfaz.calendarizacion;
 
 import logic.Categoria;
+import logic.Recurso;
 import logic.Reserva;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class calendarizacionView implements PropertyChangeListener {
 
@@ -25,7 +25,7 @@ public class calendarizacionView implements PropertyChangeListener {
     private ControllerCalendarizacion controller;
     private ModelCalendarizacion model;
 
-    private static final String[] COLUMNAS = {"ID", "Título", "Fecha", "Hora Inicio", "Hora Fin", "Recurso", "Categoría", "Estado"};
+    private static final String[] COLUMNAS = {"ID", "Título", "Fecha", "Hora Inicio", "Hora Fin", "Recursos", "Categorías", "Estado"};
     private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -38,7 +38,7 @@ public class calendarizacionView implements PropertyChangeListener {
     }
 
     public JPanel getMainPanel() {
-        return panel; // Ahora 'panel' estará vinculado correctamente al .form
+        return panel;
     }
 
     public JTextField getTxtFecha() {
@@ -106,19 +106,24 @@ public class calendarizacionView implements PropertyChangeListener {
 
         if (reservas != null) {
             for (Reserva r : reservas) {
+                String recursosStr = (r.getRecursosAsignados() != null) ?
+                        r.getRecursosAsignados().stream().map(Recurso::getNombre).collect(Collectors.joining(", ")) : "";
+
+                String categoriasStr = (r.getCategoriasRequeridas() != null) ?
+                        r.getCategoriasRequeridas().stream().map(Categoria::getNombre).collect(Collectors.joining(", ")) : "";
+
                 tableModel.addRow(new Object[]{
                         r.getId(),
                         r.getTitulo(),
                         r.getFecha() != null ? r.getFecha().format(FMT_FECHA) : "",
                         r.getHoraInicio() != null ? r.getHoraInicio().format(FMT_HORA) : "",
                         r.getHoraFin() != null ? r.getHoraFin().format(FMT_HORA) : "",
-                        r.getRecurso() != null ? r.getRecurso().getNombre() : "",
-                        r.getCategoria() != null ? r.getCategoria().getNombre() : "",
+                        recursosStr,
+                        categoriasStr,
                         r.getEstado()
                 });
             }
         }
         table1.setModel(tableModel);
     }
-
 }

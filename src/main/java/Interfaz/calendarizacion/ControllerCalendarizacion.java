@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
 
 public class ControllerCalendarizacion {
@@ -22,7 +23,6 @@ public class ControllerCalendarizacion {
     private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");
 
-    // Constructor actualizado para recibir opcionalmente al usuario activo
     public ControllerCalendarizacion(calendarizacionView view, ModelCalendarizacion model, Funcionario usuarioActual) {
         this.view = view;
         this.model = model;
@@ -34,7 +34,6 @@ public class ControllerCalendarizacion {
         inicializar();
     }
 
-    // Sobrecarga de constructor por compatibilidad
     public ControllerCalendarizacion(calendarizacionView view, ModelCalendarizacion model) {
         this(view, model, null);
     }
@@ -73,8 +72,9 @@ public class ControllerCalendarizacion {
         }
     }
 
+    // Método principal con listas
     public boolean agregarReserva(String titulo, String fechaStr, String horaInicioStr,
-                                  String horaFinStr, Recurso recurso, Categoria categoria) {
+                                  String horaFinStr, List<Recurso> recursos, List<Categoria> categorias) {
         try {
             LocalDate fecha = LocalDate.parse(fechaStr, FMT_FECHA);
             LocalTime horaInicio = LocalTime.parse(horaInicioStr, FMT_HORA);
@@ -86,10 +86,10 @@ public class ControllerCalendarizacion {
             }
 
             Reserva nueva = new Reserva(model.generarId(), titulo, fecha, horaInicio, horaFin,
-                    recurso, categoria, usuarioActual);
+                    recursos, categorias, usuarioActual);
 
             if (!model.agregarReserva(nueva)) {
-                JOptionPane.showMessageDialog(view.getMainPanel(), "Conflicto de horario: el recurso ya está reservado en ese horario.", "Error", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(view.getMainPanel(), "Conflicto de horario: uno o más recursos ya están reservados en ese horario.", "Error", JOptionPane.WARNING_MESSAGE);
                 return false;
             }
 
@@ -99,6 +99,20 @@ public class ControllerCalendarizacion {
             JOptionPane.showMessageDialog(view.getMainPanel(), "Formato de fecha u hora inválido.", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
+    }
+
+    // Sobrecarga para objeto individual Recurso + Categoria
+    public boolean agregarReserva(String titulo, String fechaStr, String horaInicioStr,
+                                  String horaFinStr, Recurso recurso, Categoria categoria) {
+        List<Recurso> recs = (recurso != null) ? Collections.singletonList(recurso) : Collections.emptyList();
+        List<Categoria> cats = (categoria != null) ? Collections.singletonList(categoria) : Collections.emptyList();
+        return agregarReserva(titulo, fechaStr, horaInicioStr, horaFinStr, recs, cats);
+    }
+
+    // Sobrecarga para objeto individual Recurso
+    public boolean agregarReserva(String titulo, String fechaStr, String horaInicioStr,
+                                  String horaFinStr, Recurso recurso) {
+        return agregarReserva(titulo, fechaStr, horaInicioStr, horaFinStr, recurso, null);
     }
 
     public void eliminarReservaSeleccionada() {

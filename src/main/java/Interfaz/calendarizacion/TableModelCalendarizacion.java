@@ -1,10 +1,13 @@
 package Interfaz.calendarizacion;
 
 import Interfaz.AbstractTableModelBase;
+import logic.Categoria;
+import logic.Recurso;
 import logic.Reserva;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TableModelCalendarizacion extends AbstractTableModelBase<Reserva> {
 
@@ -32,8 +35,8 @@ public class TableModelCalendarizacion extends AbstractTableModelBase<Reserva> {
         colNames[FECHA] = "Fecha";
         colNames[HORA_INICIO] = "Hora Inicio";
         colNames[HORA_FIN] = "Hora Fin";
-        colNames[RECURSO] = "Recurso";
-        colNames[CATEGORIA] = "Categoría";
+        colNames[RECURSO] = "Recursos";
+        colNames[CATEGORIA] = "Categorías";
         colNames[ESTADO] = "Estado";
     }
 
@@ -51,9 +54,11 @@ public class TableModelCalendarizacion extends AbstractTableModelBase<Reserva> {
             case HORA_FIN:
                 return r.getHoraFin() != null ? r.getHoraFin().format(FMT_HORA) : "";
             case RECURSO:
-                return r.getRecurso() != null ? r.getRecurso().getNombre() : "";
+                return r.getRecurso() != null ? r.getRecurso().getNombre() :
+                        (r.getRecursosAsignados() != null ? r.getRecursosAsignados().stream().map(Recurso::getNombre).collect(Collectors.joining(", ")) : "");
             case CATEGORIA:
-                return r.getCategoria() != null ? r.getCategoria().getNombre() : "";
+                return r.getCategoria() != null ? r.getCategoria().getNombre() :
+                        (r.getCategoriasRequeridas() != null ? r.getCategoriasRequeridas().stream().map(Categoria::getNombre).collect(Collectors.joining(", ")) : "");
             case ESTADO:
                 return r.getEstado();
             default:

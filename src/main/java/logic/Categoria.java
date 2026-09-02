@@ -23,5 +23,7 @@ public class Categoria {
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
     @Override
-    public String toString() { return nombre; }
+    public String toString() {
+        return (nombre != null && !nombre.isBlank()) ? nombre : (descripcion != null ? descripcion : id);
+    }
 }

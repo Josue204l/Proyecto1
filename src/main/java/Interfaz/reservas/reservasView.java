@@ -1,6 +1,10 @@
 package Interfaz.reservas;
 
+import data.Data;
+import logic.Categoria;
+
 import javax.swing.*;
+import java.util.List;
 
 public class reservasView {
 
@@ -28,9 +32,31 @@ public class reservasView {
     private JButton cancelarReservaSelecionadaButton;
     private JButton imprimirButton;
 
-    // Listas y Tablas
-    private JList<String> listCategorias;
+    // Listas y Tablas (Soporta tipo genérico Categoria)
+    private JList<Categoria> listCategorias;
     private JTable tableMisReservas;
+
+    public reservasView() {
+        inicializarListaCategorias();
+    }
+
+    /**
+     * Configura el modelo de JList para mostrar objetos Categoria
+     * y habilita la selección múltiple.
+     */
+    public void inicializarListaCategorias() {
+        if (listCategorias != null) {
+            DefaultListModel<Categoria> model = new DefaultListModel<>();
+            List<Categoria> categorias = Data.getInstancia().getCategorias();
+            if (categorias != null) {
+                for (Categoria cat : categorias) {
+                    model.addElement(cat);
+                }
+            }
+            listCategorias.setModel(model);
+            listCategorias.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        }
+    }
 
     // --- MÉTODOS DE CONTROLADOR ---
 
@@ -112,7 +138,10 @@ public class reservasView {
         return imprimirButton;
     }
 
-    public JList<String> getListCategorias() {
+    /**
+     * Devuelve el JList fuertemente tipado con objetos Categoria.
+     */
+    public JList<Categoria> getListaCategorias() {
         return listCategorias;
     }
 }

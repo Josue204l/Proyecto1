@@ -32,6 +32,9 @@ public class Data {
 
         reservas = XmlPersister.cargarReservas();
         if (reservas == null) reservas = new ArrayList<>();
+
+        // Asegurar que los datos se guarden en disco al cerrar la aplicación
+        Runtime.getRuntime().addShutdownHook(new Thread(this::guardarTodo));
     }
 
     public static Data getInstancia() {
@@ -39,11 +42,13 @@ public class Data {
         return instancia;
     }
 
+    // --- Listas de datos ---
     public List<Funcionario> getFuncionarios() { return funcionarios; }
     public List<Reserva> getReservas() { return reservas; }
     public List<Recurso> getRecursos() { return recursos; }
     public List<Categoria> getCategorias() { return categorias; }
 
+    // --- Métodos de guardado explícito ---
     public void guardarTodo() {
         XmlPersister.guardarFuncionarios(funcionarios);
         XmlPersister.guardarCategorias(categorias);
