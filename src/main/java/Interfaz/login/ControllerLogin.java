@@ -1,6 +1,7 @@
 package Interfaz.login;
 
 import logic.Service;
+import logic.Sesion;
 import logic.Usuario;
 
 import javax.swing.*;
@@ -9,11 +10,6 @@ public class ControllerLogin {
 
     private final ModelLogin model;
     private final LoginView view;
-    private ControllerLogin controller;
-
-    public void setController(ControllerLogin controller) {
-        this.controller = controller;
-    }
 
     public ControllerLogin(ModelLogin model, LoginView view) {
         this.model = model;
@@ -26,19 +22,34 @@ public class ControllerLogin {
         String clave = new String(view.getTxtClave().getPassword()).trim();
 
         if (id.isEmpty() || clave.isEmpty()) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Debe ingresar usuario y contraseña.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Debe ingresar usuario y contraseña.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        Usuario usuario = Service.instance().login(id, clave);
+        try {
+            // Se consulta el servicio (capturando cualquier excepción de lectura/XML)
+            Usuario usuario = Service.instance().login(id, clave);
 
-        if (usuario == null) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Usuario o contraseña incorrectos.", "Error de autenticación", JOptionPane.ERROR_MESSAGE);
-            return;
+            if (usuario == null) {
+                JOptionPane.showMessageDialog(view, "Usuario o contraseña incorrectos.", "Error de autenticación", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Asignación de la sesión estática y del modelo
+            Sesion.setUsuario(usuario);
+            model.setCurrentUser(usuario);
+
+            // Cierra el JDialog modal para liberar el hilo y continuar hacia doRun()
+            view.dispose();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view, ex.getMessage(), "Error de autenticación", JOptionPane.ERROR_MESSAGE);
         }
+    }
 
-        // Se actualiza el modelo, lo cual notifica a quien esté escuchando
-        model.setCurrentUser(usuario);
+    public void cancel() {
+        Sesion.logout();
+        view.dispose();
     }
 
     public void clear() {

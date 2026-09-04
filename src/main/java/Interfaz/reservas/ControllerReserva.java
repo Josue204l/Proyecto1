@@ -4,6 +4,8 @@ import logic.Categoria;
 import logic.Funcionario;
 import logic.Recurso;
 import logic.Reserva;
+import services.AIService;
+import services.ReservaExtraccion;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -38,6 +40,95 @@ public class ControllerReserva {
             view.getCancelarReservaSelecionadaButton().addActionListener(e -> cancelarSeleccionada());
         if (view.getLImpiarButton() != null)
             view.getLImpiarButton().addActionListener(e -> limpiar());
+        if (view.getExtraerButton() != null)
+            view.getExtraerButton().addActionListener(e -> extraerConIA());
+    }
+
+    /**
+     * Llama al servicio de IA para extraer datos de la frase en lenguaje natural
+     * y autocompletar el formulario de reservas.
+     */
+    private void extraerConIA() {
+        if (view.getTextFrase() == null) return;
+
+        String frase = view.getTextFrase().getText().trim();
+        if (frase.isEmpty()) {
+            JOptionPane.showMessageDialog(view.getMainPanel(),
+                    "Por favor, ingrese una frase en el campo de texto para extraer los datos con IA.",
+                    "Campo Vacío", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            // Animación/Aviso de carga
+            view.getExtraerButton().setEnabled(false);
+
+            // Llamar al servicio de extracción con LangChain4j
+            AIService aiService = new AIService();
+            ReservaExtraccion datos = aiService.extraerReserva(frase);
+
+            if (datos != null) {
+                // 1. Actividad / Título
+                if (datos.getActividad() != null && view.getTxtActividad() != null) {
+                    view.getTxtActividad().setText(datos.getActividad());
+                }
+
+                // 2. Fecha (Convierte ISO yyyy-MM-dd devuelto por la IA a dd/MM/yyyy)
+                if (datos.getFecha() != null && view.getTextFecha() != null) {
+                    try {
+                        LocalDate fechaIso = LocalDate.parse(datos.getFecha()); // yyyy-MM-dd
+                        view.getTextFecha().setText(fechaIso.format(FMT_FECHA));
+                    } catch (Exception e) {
+                        view.getTextFecha().setText(datos.getFecha());
+                    }
+                }
+
+                // 3. Hora Inicio
+                if (datos.getHoraInicio() != null && view.getTxtHoraInicio() != null) {
+                    view.getTxtHoraInicio().setText(datos.getHoraInicio());
+                }
+
+                // 4. Hora Fin
+                if (datos.getHoraFinal() != null && view.getTxtHoraFin() != null) {
+                    view.getTxtHoraFin().setText(datos.getHoraFinal());
+                }
+
+                // 5. Categorías seleccionadas
+                if (datos.getCategoriasRecurso() != null && !datos.getCategoriasRecurso().isEmpty() && view.getListaCategorias() != null) {
+                    List<String> categoriasNombreIA = datos.getCategoriasRecurso();
+                    ListModel<Categoria> modelCat = view.getListaCategorias().getModel();
+                    List<Integer> indicesParaSeleccionar = new ArrayList<>();
+
+                    for (int i = 0; i < modelCat.getSize(); i++) {
+                        Categoria cat = modelCat.getElementAt(i);
+                        for (String nombreIa : categoriasNombreIA) {
+                            if (cat.getNombre() != null && cat.getNombre().equalsIgnoreCase(nombreIa.trim())) {
+                                indicesParaSeleccionar.add(i);
+                                break;
+                            }
+                        }
+                    }
+
+                    int[] indicesArray = indicesParaSeleccionar.stream().mapToInt(Integer::intValue).toArray();
+                    view.getListaCategorias().setSelectedIndices(indicesArray);
+
+                    // Reflejar nombres de categorías en el campo de texto informativo
+                    if (view.getTxtCategoriasRequeridas() != null) {
+                        view.getTxtCategoriasRequeridas().setText(String.join(", ", categoriasNombreIA));
+                    }
+                }
+
+                JOptionPane.showMessageDialog(view.getMainPanel(),
+                        "Datos extraídos correctamente por la IA.",
+                        "Extracción Exitosa", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(),
+                    "Error al comunicarse con el servicio de IA: " + ex.getMessage(),
+                    "Error IA", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            view.getExtraerButton().setEnabled(true);
+        }
     }
 
     private void guardar() {
@@ -106,10 +197,13 @@ public class ControllerReserva {
     }
 
     private void limpiar() {
+        if (view.getTextFrase() != null) view.getTextFrase().setText("");
         if (view.getTxtActividad() != null) view.getTxtActividad().setText("");
         if (view.getTextFecha() != null) view.getTextFecha().setText("");
         if (view.getTxtHoraInicio() != null) view.getTxtHoraInicio().setText("");
         if (view.getTxtHoraFin() != null) view.getTxtHoraFin().setText("");
+        if (view.getTxtCategoriasRequeridas() != null) view.getTxtCategoriasRequeridas().setText("");
+        if (view.getListaCategorias() != null) view.getListaCategorias().clearSelection();
     }
 
     private void actualizarTabla() {
