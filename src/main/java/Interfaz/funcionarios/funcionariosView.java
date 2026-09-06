@@ -14,8 +14,9 @@ public class funcionariosView {
     private JButton borrarButton;
     private JButton limpiarButton;
     private JTable table1;
+    private JPanel panel1;
 
-    public JPanel getMainPanel() { return new JPanel(); }
+    public JPanel getMainPanel() { return panel1; }
     public JTable getTable() { return table1; }
     public JTextField getTxtId() { return textField1; }
     public JTextField getTxtNombre() { return textField2; }

@@ -1,5 +1,6 @@
 package Interfaz.login;
 
+import Interfaz.cambiarclave.cambiarclaveView;
 import javax.swing.*;
 import java.awt.*;
 
@@ -35,6 +36,12 @@ public class LoginView extends JDialog {
 
         pack();
         setLocationRelativeTo(parent);
+
+        // Listener para abrir la vista de Cambiar Contraseña
+        cambiarButton.addActionListener(e -> {
+            cambiarclaveView vista = new cambiarclaveView((Frame) LoginView.this.getParent());
+            vista.setVisible(true);
+        });
     }
 
     public void setController(ControllerLogin controller) {
