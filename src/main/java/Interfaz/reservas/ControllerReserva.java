@@ -6,9 +6,11 @@ import logic.Recurso;
 import logic.Reserva;
 import services.AIService;
 import services.ReservaExtraccion;
+import utils.PDFGenerator;
 
 import javax.swing.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -26,11 +28,22 @@ public class ControllerReserva {
 
     public ControllerReserva(reservasView view, Funcionario usuarioActual) {
         this.view = view;
-        this.model = new ModelReserva();
         this.usuarioActual = usuarioActual;
+        this.model = new ModelReserva(usuarioActual);
         view.setController(this);
+        poblarCategorias();
         registrarEventos();
         actualizarTabla();
+    }
+
+    private void poblarCategorias() {
+        if (view.getListaCategorias() != null) {
+            DefaultListModel<Categoria> listModel = new DefaultListModel<>();
+            for (Categoria cat : model.getCategorias()) {
+                listModel.addElement(cat);
+            }
+            view.getListaCategorias().setModel(listModel);
+        }
     }
 
     private void registrarEventos() {
@@ -42,12 +55,10 @@ public class ControllerReserva {
             view.getLImpiarButton().addActionListener(e -> limpiar());
         if (view.getExtraerButton() != null)
             view.getExtraerButton().addActionListener(e -> extraerConIA());
+        if (view.getImprimirButton() != null)
+            view.getImprimirButton().addActionListener(e -> imprimirPDF());
     }
 
-    /**
-     * Llama al servicio de IA para extraer datos de la frase en lenguaje natural
-     * y autocompletar el formulario de reservas.
-     */
     private void extraerConIA() {
         if (view.getTextFrase() == null) return;
 
@@ -60,40 +71,32 @@ public class ControllerReserva {
         }
 
         try {
-            // Animación/Aviso de carga
             view.getExtraerButton().setEnabled(false);
-
-            // Llamar al servicio de extracción con LangChain4j
             AIService aiService = new AIService();
             ReservaExtraccion datos = aiService.extraerReserva(frase);
 
             if (datos != null) {
-                // 1. Actividad / Título
                 if (datos.getActividad() != null && view.getTxtActividad() != null) {
                     view.getTxtActividad().setText(datos.getActividad());
                 }
 
-                // 2. Fecha (Convierte ISO yyyy-MM-dd devuelto por la IA a dd/MM/yyyy)
                 if (datos.getFecha() != null && view.getTextFecha() != null) {
                     try {
-                        LocalDate fechaIso = LocalDate.parse(datos.getFecha()); // yyyy-MM-dd
+                        LocalDate fechaIso = LocalDate.parse(datos.getFecha());
                         view.getTextFecha().setText(fechaIso.format(FMT_FECHA));
                     } catch (Exception e) {
                         view.getTextFecha().setText(datos.getFecha());
                     }
                 }
 
-                // 3. Hora Inicio
                 if (datos.getHoraInicio() != null && view.getTxtHoraInicio() != null) {
                     view.getTxtHoraInicio().setText(datos.getHoraInicio());
                 }
 
-                // 4. Hora Fin
                 if (datos.getHoraFinal() != null && view.getTxtHoraFin() != null) {
                     view.getTxtHoraFin().setText(datos.getHoraFinal());
                 }
 
-                // 5. Categorías seleccionadas
                 if (datos.getCategoriasRecurso() != null && !datos.getCategoriasRecurso().isEmpty() && view.getListaCategorias() != null) {
                     List<String> categoriasNombreIA = datos.getCategoriasRecurso();
                     ListModel<Categoria> modelCat = view.getListaCategorias().getModel();
@@ -102,7 +105,7 @@ public class ControllerReserva {
                     for (int i = 0; i < modelCat.getSize(); i++) {
                         Categoria cat = modelCat.getElementAt(i);
                         for (String nombreIa : categoriasNombreIA) {
-                            if (cat.getNombre() != null && cat.getNombre().equalsIgnoreCase(nombreIa.trim())) {
+                            if (cat.getDescripcion() != null && cat.getDescripcion().toLowerCase().contains(nombreIa.trim().toLowerCase())) {
                                 indicesParaSeleccionar.add(i);
                                 break;
                             }
@@ -112,7 +115,6 @@ public class ControllerReserva {
                     int[] indicesArray = indicesParaSeleccionar.stream().mapToInt(Integer::intValue).toArray();
                     view.getListaCategorias().setSelectedIndices(indicesArray);
 
-                    // Reflejar nombres de categorías en el campo de texto informativo
                     if (view.getTxtCategoriasRequeridas() != null) {
                         view.getTxtCategoriasRequeridas().setText(String.join(", ", categoriasNombreIA));
                     }
@@ -149,21 +151,20 @@ public class ControllerReserva {
             LocalTime horaFin = LocalTime.parse(horaFinStr, FMT_HORA);
             if (!horaFin.isAfter(horaInicio)) throw new Exception("La hora de fin debe ser posterior a la hora de inicio.");
 
-            // Obtener las categorías seleccionadas desde la vista
             List<Categoria> categoriasSeleccionadas = obtenerCategoriasSeleccionadas();
             if (categoriasSeleccionadas.isEmpty()) {
                 throw new Exception("Debe seleccionar al menos una categoría de recursos.");
             }
 
-            // Asignar primer recurso libre de cada categoría
             List<Recurso> recursosAsignados = model.asignarRecursosDisponibles(categoriasSeleccionadas, fecha, horaInicio, horaFin);
 
             Reserva nueva = new Reserva(model.generarId(), titulo, fecha, horaInicio, horaFin, recursosAsignados, usuarioActual);
+            nueva.setEstado("ACTIVA");
 
             model.guardar(nueva);
             actualizarTabla();
             limpiar();
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Reserva guardada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Reserva realizada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), "Formato inválido. Use dd/MM/yyyy para fecha y HH:mm para hora.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -172,7 +173,6 @@ public class ControllerReserva {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private List<Categoria> obtenerCategoriasSeleccionadas() {
         List<Categoria> lista = new ArrayList<>();
         if (view.getListaCategorias() != null) {
@@ -188,11 +188,30 @@ public class ControllerReserva {
             JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione una reserva para cancelar.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+
         String id = (String) view.getTablaMisReservas().getValueAt(fila, 0);
-        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(), "¿Cancelar la reserva seleccionada?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        Reserva res = model.getMisReservas().stream().filter(r -> r.getId().equals(id)).findFirst().orElse(null);
+
+        if (res == null) return;
+
+        // Validar que la reserva sea en una fecha/hora futura
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime fechaHoraInicioReserva = LocalDateTime.of(res.getFecha(), res.getHoraInicio());
+
+        if (!fechaHoraInicioReserva.isAfter(ahora)) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Solo se pueden cancelar reservas futuras.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(), "¿Desea cancelar la reserva seleccionada?", "Confirmar Cancelación", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            model.eliminar(id);
-            actualizarTabla();
+            try {
+                model.cancelarReserva(res);
+                actualizarTabla();
+                JOptionPane.showMessageDialog(view.getMainPanel(), "Reserva cancelada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -206,6 +225,12 @@ public class ControllerReserva {
         if (view.getListaCategorias() != null) view.getListaCategorias().clearSelection();
     }
 
+    private void imprimirPDF() {
+        if (view.getTablaMisReservas() != null) {
+            PDFGenerator.generarReporteTabla("Mis Reservas", view.getTablaMisReservas());
+        }
+    }
+
     private void actualizarTabla() {
         if (view.getTablaMisReservas() != null) {
             view.getTablaMisReservas().setModel(model.getTableModel());
@@ -213,6 +238,4 @@ public class ControllerReserva {
     }
 
     public ModelReserva getModel() { return model; }
-
-    public List<Reserva> getReservas() { return model.getReservas(); }
 }

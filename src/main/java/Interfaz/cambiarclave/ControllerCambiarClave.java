@@ -3,6 +3,7 @@ package Interfaz.cambiarclave;
 import logic.Usuario;
 
 import javax.swing.*;
+import java.awt.Window;
 
 public class ControllerCambiarClave {
 
@@ -19,6 +20,9 @@ public class ControllerCambiarClave {
         if (view.getAceptarButton() != null) {
             view.getAceptarButton().addActionListener(e -> cambiar());
         }
+        if (view.getCancelarButton() != null) {
+            view.getCancelarButton().addActionListener(e -> cerrarVentana());
+        }
     }
 
     private void cambiar() {
@@ -28,8 +32,16 @@ public class ControllerCambiarClave {
         try {
             model.cambiar(actual, nueva, confirmar);
             JOptionPane.showMessageDialog(view.getMainPanel(), "Clave cambiada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            cerrarVentana();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void cerrarVentana() {
+        Window window = SwingUtilities.getWindowAncestor(view.getMainPanel());
+        if (window != null) {
+            window.dispose();
         }
     }
 }

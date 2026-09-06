@@ -18,9 +18,9 @@ public class Data {
 
     private Data() {
         funcionarios = XmlPersister.cargarFuncionarios();
-        if (funcionarios == null) {
+        if (funcionarios == null || funcionarios.isEmpty()) {
             funcionarios = new ArrayList<>();
-            funcionarios.add(new Funcionario("1234", "123", "ADMIN", "Administrador", ""));
+            funcionarios.add(new Funcionario("1234", "123", "ADMIN", "Administrador", "00000000"));
             XmlPersister.guardarFuncionarios(funcionarios);
         }
 
@@ -33,12 +33,14 @@ public class Data {
         reservas = XmlPersister.cargarReservas();
         if (reservas == null) reservas = new ArrayList<>();
 
-        // Asegurar que los datos se guarden en disco al cerrar la aplicación
+        // Asegurar persistencia final en shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(this::guardarTodo));
     }
 
-    public static Data getInstancia() {
-        if (instancia == null) instancia = new Data();
+    public static synchronized Data getInstancia() {
+        if (instancia == null) {
+            instancia = new Data();
+        }
         return instancia;
     }
 

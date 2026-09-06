@@ -2,6 +2,7 @@ package Interfaz.reservas;
 
 import data.Data;
 import logic.Categoria;
+import logic.Funcionario;
 import logic.Recurso;
 import logic.Reserva;
 
@@ -11,19 +12,20 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ModelReserva {
 
     public static final String SELECCIONADO = "seleccionado";
     public static final String LISTA = "lista";
 
-    private Reserva seleccionado;
+    private final Funcionario usuarioActual;
     private TableModelReserva tableModel;
     private final PropertyChangeSupport propertyChangeSupport;
 
-    public ModelReserva() {
-        this.seleccionado = new Reserva();
-        this.tableModel = new TableModelReserva(getReservas());
+    public ModelReserva(Funcionario usuarioActual) {
+        this.usuarioActual = usuarioActual;
+        this.tableModel = new TableModelReserva(getMisReservas());
         this.propertyChangeSupport = new PropertyChangeSupport(this);
     }
 
@@ -31,18 +33,17 @@ public class ModelReserva {
         propertyChangeSupport.addPropertyChangeListener(listener);
     }
 
-    public Reserva getSeleccionado() { return seleccionado; }
-
-    public void setSeleccionado(Reserva seleccionado) {
-        Reserva old = this.seleccionado;
-        this.seleccionado = seleccionado;
-        propertyChangeSupport.firePropertyChange(SELECCIONADO, old, seleccionado);
-    }
-
     public TableModelReserva getTableModel() { return tableModel; }
 
-    public List<Reserva> getReservas() {
-        return Data.getInstancia().getReservas();
+    public List<Reserva> getMisReservas() {
+        if (usuarioActual == null) return new ArrayList<>();
+        return Data.getInstancia().getReservas().stream()
+                .filter(r -> r.getSolicitante() != null && r.getSolicitante().getId().equals(usuarioActual.getId()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Categoria> getCategorias() {
+        return Data.getInstancia().getCategorias();
     }
 
     public List<Recurso> asignarRecursosDisponibles(List<Categoria> categorias, LocalDate fecha, LocalTime inicio, LocalTime fin) throws Exception {
@@ -52,19 +53,17 @@ public class ModelReserva {
         for (Categoria cat : categorias) {
             Recurso recursoEncontrado = null;
 
-            // Buscar recursos pertenecientes a la categoría dada
             for (Recurso r : Data.getInstancia().getRecursos()) {
-                // Evitar reutilizar un recurso ya asignado en esta misma selección
-                boolean yaAsignadoEnEstaReserva = asignados.stream().anyMatch(a -> a.getId().equals(r.getId()));
-                if (yaAsignadoEnEstaReserva) continue;
+                boolean yaAsignado = asignados.stream().anyMatch(a -> a.getId().equals(r.getId()));
+                if (yaAsignado) continue;
 
                 if (r.getCategoria() != null && r.getCategoria().getId().equals(cat.getId())) {
-                    // Verificar si está libre en ese horario en otras reservas activas
                     boolean libre = true;
-                    for (Reserva res : getReservas()) {
+                    // Solo validar solapamiento contra reservas que estén ACTIVAS
+                    for (Reserva res : Data.getInstancia().getReservas()) {
                         if ("ACTIVA".equalsIgnoreCase(res.getEstado()) && res.getFecha().equals(fecha)) {
-                            boolean solapaHorario = inicio.isBefore(res.getHoraFin()) && res.getHoraInicio().isBefore(fin);
-                            if (solapaHorario && res.getRecursosAsignados().stream().anyMatch(rec -> rec.getId().equals(r.getId()))) {
+                            boolean solapa = inicio.isBefore(res.getHoraFin()) && res.getHoraInicio().isBefore(fin);
+                            if (solapa && res.getRecursosAsignados() != null && res.getRecursosAsignados().stream().anyMatch(rec -> rec.getId().equals(r.getId()))) {
                                 libre = false;
                                 break;
                             }
@@ -72,7 +71,7 @@ public class ModelReserva {
                     }
                     if (libre) {
                         recursoEncontrado = r;
-                        break; // Se asigna el primer recurso disponible
+                        break;
                     }
                 }
             }
@@ -85,7 +84,7 @@ public class ModelReserva {
         }
 
         if (!noDisponibles.isEmpty()) {
-            throw new Exception("Sin disponibilidad para las categorías: " + String.join(", ", noDisponibles));
+            throw new Exception("No hay recursos disponibles para: " + String.join(", ", noDisponibles));
         }
 
         return asignados;
@@ -106,26 +105,26 @@ public class ModelReserva {
             lista.add(reserva);
         }
 
-        // Guardar persistencia en disco XML
         Data.getInstancia().guardarReservas();
+        this.tableModel.setFilas(getMisReservas());
+        propertyChangeSupport.firePropertyChange(LISTA, null, getMisReservas());
+    }
 
-        this.tableModel.setFilas(lista);
-        propertyChangeSupport.firePropertyChange(LISTA, null, lista);
+    public void cancelarReserva(Reserva reserva) throws Exception {
+        reserva.setEstado("CANCELADA");
+        Data.getInstancia().guardarReservas();
+        this.tableModel.setFilas(getMisReservas());
+        propertyChangeSupport.firePropertyChange(LISTA, null, getMisReservas());
     }
 
     public String generarId() {
-        return "RES-" + System.currentTimeMillis();
-    }
-
-    public boolean eliminar(String id) {
-        boolean eliminado = Data.getInstancia().getReservas().removeIf(r -> r.getId().equals(id));
-        if (eliminado) {
-            // Guardar persistencia en disco XML tras eliminar
-            Data.getInstancia().guardarReservas();
-
-            this.tableModel.setFilas(getReservas());
-            propertyChangeSupport.firePropertyChange(LISTA, null, getReservas());
-        }
-        return eliminado;
+        int max = Data.getInstancia().getReservas().stream().mapToInt(r -> {
+            try {
+                return Integer.parseInt(r.getId().replace("RES-", ""));
+            } catch (Exception e) {
+                return 0;
+            }
+        }).max().orElse(0);
+        return String.format("RES-%06d", max + 1);
     }
 }

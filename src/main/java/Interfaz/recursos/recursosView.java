@@ -1,10 +1,11 @@
 package Interfaz.recursos;
 
+import logic.Categoria;
 import javax.swing.*;
 
 public class recursosView {
     private JPanel recursos;
-    private JComboBox category;
+    private JComboBox<Categoria> category;
     private JTextField descrip;
     private JButton buscarButton;
     private JButton imprimirButton;
@@ -13,18 +14,19 @@ public class recursosView {
     private JLabel Categoria;
     private JButton Guardar;
     private JButton limpiarButton;
-    private JComboBox categorias;
+    private JComboBox<Categoria> categorias;
     private JTextField idtext;
     private JTextField descripcion;
     private JButton borrarButton;
+    private JTable tablaRecursos;
 
     public recursosView() {}
 
     public JPanel getPanel() { return recursos != null ? recursos : new JPanel(); }
     public JPanel getMainPanel() { return getPanel(); }
-    public JComboBox getCmbFiltroCategoria() { return category; }
-    public JComboBox getCmbCategoria() { return categorias; }
-    public JTextField getTxtBuscar() { return descrip; }
+    public JComboBox<Categoria> getCmbFiltroCategoria() { return category; }
+    public JComboBox<Categoria> getCmbCategoriaForm() { return categorias; }
+    public JTextField getTxtBuscarDescripcion() { return descrip; }
     public JTextField getTxtId() { return idtext; }
     public JTextField getTxtDescripcion() { return descripcion; }
     public JButton getBuscarButton() { return buscarButton; }
@@ -32,4 +34,11 @@ public class recursosView {
     public JButton getGuardarButton() { return Guardar; }
     public JButton getLimpiarButton() { return limpiarButton; }
     public JButton getBorrarButton() { return borrarButton; }
+
+    public JTable getTablaRecursos() {
+        if (tablaRecursos == null) {
+            tablaRecursos = new JTable();
+        }
+        return tablaRecursos;
+    }
 }

@@ -2,10 +2,13 @@ package Interfaz.funcionarios;
 
 import data.Data;
 import logic.Funcionario;
+import logic.Reserva;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ModelFuncionario {
 
@@ -14,11 +17,13 @@ public class ModelFuncionario {
 
     private Funcionario seleccionado;
     private TableModelFuncionario tableModel;
+    private List<Funcionario> listaFiltrada;
     private final PropertyChangeSupport propertyChangeSupport;
 
     public ModelFuncionario() {
         this.seleccionado = new Funcionario();
-        this.tableModel = new TableModelFuncionario(getFuncionarios());
+        this.listaFiltrada = new ArrayList<>(getFuncionarios());
+        this.tableModel = new TableModelFuncionario(listaFiltrada);
         this.propertyChangeSupport = new PropertyChangeSupport(this);
     }
 
@@ -26,9 +31,7 @@ public class ModelFuncionario {
         propertyChangeSupport.addPropertyChangeListener(listener);
     }
 
-    public Funcionario getSeleccionado() {
-        return seleccionado;
-    }
+    public Funcionario getSeleccionado() { return seleccionado; }
 
     public void setSeleccionado(Funcionario seleccionado) {
         Funcionario old = this.seleccionado;
@@ -36,12 +39,24 @@ public class ModelFuncionario {
         propertyChangeSupport.firePropertyChange(SELECCIONADO, old, seleccionado);
     }
 
-    public TableModelFuncionario getTableModel() {
-        return tableModel;
-    }
+    public TableModelFuncionario getTableModel() { return tableModel; }
 
     public List<Funcionario> getFuncionarios() {
         return Data.getInstancia().getFuncionarios();
+    }
+
+    public void buscar(String id, String nombre) {
+        listaFiltrada = getFuncionarios().stream().filter(f -> {
+            boolean coincideId = id.isEmpty() || f.getId().toLowerCase().contains(id.toLowerCase());
+            boolean coincideNombre = nombre.isEmpty() || f.getNombre().toLowerCase().contains(nombre.toLowerCase());
+            return coincideId && coincideNombre;
+        }).collect(Collectors.toList());
+        tableModel.setFilas(listaFiltrada);
+    }
+
+    public void restablecerFiltro() {
+        listaFiltrada = new ArrayList<>(getFuncionarios());
+        tableModel.setFilas(listaFiltrada);
     }
 
     public void guardar(Funcionario funcionario) throws Exception {
@@ -54,20 +69,31 @@ public class ModelFuncionario {
             }
         }
         if (index >= 0) {
+            // Preservar la clave actual si se está modificando un usuario existente
+            funcionario.setClave(funcionarios.get(index).getClave());
             funcionarios.set(index, funcionario);
         } else {
             funcionarios.add(funcionario);
         }
 
-        // Actualizamos las filas de la tabla
-        this.tableModel.setFilas(funcionarios);
+        Data.getInstancia().guardarFuncionarios();
+        restablecerFiltro();
         propertyChangeSupport.firePropertyChange(LISTA, null, funcionarios);
     }
 
-    public boolean eliminar(String id) {
+    public boolean eliminar(String id) throws Exception {
+        // Validar si el funcionario tiene reservas activas
+        boolean tieneReservas = Data.getInstancia().getReservas().stream()
+                .anyMatch(r -> r.getSolicitante() != null && r.getSolicitante().getId().equals(id) && "ACTIVA".equalsIgnoreCase(r.getEstado()));
+
+        if (tieneReservas) {
+            throw new Exception("No se puede borrar el funcionario porque posee reservas activas asignadas.");
+        }
+
         boolean eliminado = Data.getInstancia().getFuncionarios().removeIf(f -> f.getId().equals(id));
         if (eliminado) {
-            this.tableModel.setFilas(getFuncionarios());
+            Data.getInstancia().guardarFuncionarios();
+            restablecerFiltro();
             propertyChangeSupport.firePropertyChange(LISTA, null, getFuncionarios());
         }
         return eliminado;
