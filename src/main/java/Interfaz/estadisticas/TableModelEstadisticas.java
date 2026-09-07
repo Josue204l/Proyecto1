@@ -1,66 +1,37 @@
 package Interfaz.estadisticas;
 
-import logic.Recurso;
-
 import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TableModelEstadisticas extends AbstractTableModel {
 
-    public static final int CATEGORIA = 0;
-    public static final int RECURSO = 1;
-    public static final int CANTIDAD_RESERVAS = 2;
+    private List<String[]> filas;
+    private String[] columnas;
 
-    private final String[] cols = {"Categoría", "Recurso / Elemento", "Total Reservas"};
-    private List<Recurso> filas;
-
-    public TableModelEstadisticas(List<Recurso> filas) {
-        this.filas = filas;
+    public TableModelEstadisticas(List<String[]> filas) {
+        this.filas = filas != null ? filas : new ArrayList<>();
+        this.columnas = new String[]{"Categoría", "Cantidad de Reservas"};
     }
 
-    public List<Recurso> getFilas() {
-        return filas;
-    }
-
-    public void setFilas(List<Recurso> filas) {
-        this.filas = filas;
-        fireTableDataChanged();
-    }
-
-    public Recurso getRowAt(int row) {
-        if (filas != null && row >= 0 && row < filas.size()) {
-            return filas.get(row);
-        }
-        return null;
+    public void setFilasGenericas(List<String[]> filas, String[] columnas) {
+        this.filas = filas != null ? filas : new ArrayList<>();
+        this.columnas = columnas;
+        fireTableStructureChanged();
     }
 
     @Override
-    public int getRowCount() {
-        return filas != null ? filas.size() : 0;
-    }
+    public int getRowCount() { return filas.size(); }
 
     @Override
-    public int getColumnCount() {
-        return cols.length;
-    }
+    public int getColumnCount() { return columnas.length; }
 
     @Override
-    public String getColumnName(int col) {
-        return cols[col];
-    }
+    public String getColumnName(int col) { return columnas[col]; }
 
     @Override
     public Object getValueAt(int row, int col) {
-        Recurso r = filas.get(row);
-        switch (col) {
-            case CATEGORIA:
-                return r.getCategoria() != null ? r.getCategoria().getNombre() : "Sin Categoría";
-            case RECURSO:
-                return r.getNombre();
-            case CANTIDAD_RESERVAS:
-                return r.getId(); // Representación del dato estadístico/frecuencia
-            default:
-                return "";
-        }
+        String[] fila = filas.get(row);
+        return (col < fila.length) ? fila[col] : "";
     }
 }

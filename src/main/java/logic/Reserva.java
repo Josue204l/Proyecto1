@@ -90,6 +90,12 @@ public class Reserva {
     public Funcionario getSolicitante() { return solicitante; }
     public void setSolicitante(Funcionario solicitante) { this.solicitante = solicitante; }
 
+    // =======================================================
+    // METODOS ALIAS PARA COMPATIBILIDAD CON SERVICE Y OTROS
+    // =======================================================
+    public Funcionario getFuncionario() { return solicitante; }
+    public void setFuncionario(Funcionario funcionario) { this.solicitante = funcionario; }
+
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
@@ -103,7 +109,7 @@ public class Reserva {
     }
 
     public boolean seSolapaCon(Reserva otra) {
-        if (otra == null || !this.fecha.equals(otra.getFecha())) {
+        if (otra == null || this.fecha == null || otra.getFecha() == null || !this.fecha.equals(otra.getFecha())) {
             return false;
         }
         return this.horaInicio.isBefore(otra.getHoraFin()) && otra.getHoraInicio().isBefore(this.horaFin);

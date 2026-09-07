@@ -47,44 +47,38 @@ public class MainFrame extends JFrame {
         // 1. Pestañas de ADMINISTRADOR
         if (esAdmin) {
             funcionariosView vFunc = new funcionariosView();
-            ModelFuncionario mFunc = new ModelFuncionario();
-            new ControllerFuncionario(vFunc, mFunc);
+            new ControllerFuncionario(vFunc, new ModelFuncionario());
             tabbedPane.addTab("Funcionarios", vFunc.getMainPanel());
 
             categoriasView vCat = new categoriasView();
-            ModelCategoria mCat = new ModelCategoria();
-            new ControllerCategoria(vCat, mCat);
+            new ControllerCategoria(vCat, new ModelCategoria());
             tabbedPane.addTab("Categorías", vCat.getMainPanel());
 
             recursosView vRec = new recursosView();
-            ModelRecurso mRec = new ModelRecurso();
-            new ControllerRecurso(vRec, mRec);
+            new ControllerRecurso(vRec, new ModelRecurso());
             tabbedPane.addTab("Recursos", vRec.getMainPanel());
         }
 
-        // 2. Pestaña de FUNCIONARIO
+        // 2. Pestaña de FUNCIONARIO (solo funcionarios no-admin)
         if (funcionarioActual != null && !esAdmin) {
             reservasView vRes = new reservasView();
             new ControllerReserva(vRes, funcionarioActual);
             tabbedPane.addTab("Mis Reservas", vRes.getMainPanel());
         }
 
-        // 3. Pestañas comunes
+        // 3. Calendarización (todos)
         calendarizacionView vCal = new calendarizacionView();
-        ModelCalendarizacion mCal = new ModelCalendarizacion();
-        new ControllerCalendarizacion(vCal, mCal, funcionarioActual);
+        new ControllerCalendarizacion(vCal, new ModelCalendarizacion(), funcionarioActual);
         tabbedPane.addTab("Calendarización", vCal.getMainPanel());
 
-        // Módulo Actividades
+        // 4. Actividades (todos)
         actividadesView vAct = new actividadesView();
-        ModelActividades mAct = new ModelActividades();
-        new ControllerActividades(mAct); // CORREGIDO: solo pide el modelo
-        tabbedPane.addTab("Actividades", vAct.getMainPanel());
+        new ControllerActividades(vAct, new ModelActividades());
+        tabbedPane.addTab("Actividades", vAct.getMainPanel() != null ? vAct.getMainPanel() : new javax.swing.JPanel());
 
-        // Módulo Estadísticas
+        // 5. Estadísticas (todos)
         estadisticasView vEst = new estadisticasView();
-        ModelEstadisticas mEst = new ModelEstadisticas();
-        new ControllerEstadisticas(mEst); // CORREGIDO: solo pide el modelo
+        new ControllerEstadisticas(vEst, new ModelEstadisticas());
         tabbedPane.addTab("Estadísticas", vEst.getMainPanel());
 
         setContentPane(tabbedPane);
@@ -121,7 +115,6 @@ public class MainFrame extends JFrame {
     }
 
     private void abrirDialogoCambiarClave() {
-        // CORREGIDO: cambiarclaveView hereda de JDialog y recibe 'this' (Frame parent)
         cambiarclaveView dialog = new cambiarclaveView(this);
         new ControllerCambiarClave(dialog, usuarioActual);
         dialog.setVisible(true);

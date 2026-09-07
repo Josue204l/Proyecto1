@@ -44,6 +44,8 @@ public class XmlPersister {
         File archivo = new File(ruta);
         if (!archivo.exists()) return null;
         try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(archivo)))) {
+            // Captura errores internos en deserialización si una propiedad no coincide
+            decoder.setExceptionListener(e -> System.err.println("Error deserializando XML [" + ruta + "]: " + e.getMessage()));
             return (List<T>) decoder.readObject();
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,7 +56,6 @@ public class XmlPersister {
     private static void guardar(String ruta, Object objeto) {
         new File(DIR).mkdirs();
         try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(ruta)))) {
-            // Configurar delegates para que XMLEncoder reconozca LocalDate y LocalTime
             configurarDelegates(encoder);
             encoder.writeObject(objeto);
         } catch (Exception e) {
@@ -64,10 +65,9 @@ public class XmlPersister {
 
     /**
      * Enseña a XMLEncoder cómo instanciar objetos LocalDate y LocalTime
-     * usando sus métodos estáticos parse() o de construcción directa.
+     * usando sus métodos estáticos parse().
      */
     private static void configurarDelegates(XMLEncoder encoder) {
-        // Delegate para LocalDate (se serializa guardando su método toString)
         encoder.setPersistenceDelegate(LocalDate.class, new DefaultPersistenceDelegate() {
             @Override
             protected Expression instantiate(Object oldInstance, Encoder out) {
@@ -76,7 +76,6 @@ public class XmlPersister {
             }
         });
 
-        // Delegate para LocalTime (se serializa guardando su método toString)
         encoder.setPersistenceDelegate(LocalTime.class, new DefaultPersistenceDelegate() {
             @Override
             protected Expression instantiate(Object oldInstance, Encoder out) {
