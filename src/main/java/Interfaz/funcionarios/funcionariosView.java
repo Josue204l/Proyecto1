@@ -3,28 +3,50 @@ package Interfaz.funcionarios;
 import javax.swing.*;
 
 public class funcionariosView {
-    private JTextField textField1;
-    private JTextField textField2;
-    private JButton button1;
-    private JButton button2;
-    private JTextField textField3;
-    private JTextField textField4;
-    private JTextField textField5;
+
+    // --- Vinculación con el Form de IntelliJ UI Designer ---
+    private JPanel panel1;         // Panel principal declarado en <grid binding="panel1">
+
+    // Sección Búsqueda
+    private JTextField textField1; // Buscar por ID
+    private JTextField textField2; // Buscar por Nombre
+    private JButton button1;       // Botón Buscar
+    private JButton button2;       // Botón Imprimir PDF
+
+    // Sección Formulario Funcionario
+    private JTextField textField3; // ID Funcionario
+    private JTextField textField4; // Nombre Funcionario
+    private JTextField textField5; // Teléfono Funcionario
+
+    // Botones de Acción
     private JButton guardarButton;
     private JButton borrarButton;
     private JButton limpiarButton;
-    private JTable table1;
 
-    public JPanel getMainPanel() { return new JPanel(); }
-    public JTable getTable() { return table1; }
-    public JTextField getTxtId() { return textField1; }
-    public JTextField getTxtNombre() { return textField2; }
-    public JTextField getTxtClave() { return textField3; }
-    public JTextField getTxtTelefono() { return textField4; }
-    public JTextField getTxtPuesto() { return textField5; }
-    public JButton getBtnBuscar() { return button1; }
-    public JButton getBtnImprimir() { return button2; }
+    // Sección Listado
+    private JTable table1;         // Tabla de registros
+
+    // --- Contenedor Principal ---
+    public JPanel getMainPanel() {
+        return panel1 != null ? panel1 : new JPanel();
+    }
+
+    // --- Métodos Requeridos por ControllerFuncionario ---
+
+    public JTable getTablaFuncionarios() { return table1; }
+
+    public JButton getBuscarButton() { return button1; }
+    public JButton getImprimirButton() { return button2; }
     public JButton getGuardarButton() { return guardarButton; }
     public JButton getBorrarButton() { return borrarButton; }
     public JButton getLimpiarButton() { return limpiarButton; }
+
+    // Campos de Búsqueda
+    public JTextField getTxtBuscarId() { return textField1; }
+    public JTextField getTxtBuscarNombre() { return textField2; }
+
+    // Campos de Formulario (Edición / Guardado)
+    public JTextField getTxtId() { return textField3; }
+    public JTextField getTxtNombre() { return textField4; }
+    public JTextField getTxtTelefono() { return textField5; }
 }
