@@ -1,62 +1,82 @@
 package Interfaz.actividades;
 
+
 import logic.Reserva;
+import utils.Horarios;
 
 import javax.swing.table.AbstractTableModel;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 
 public class TableModelActividades extends AbstractTableModel {
 
-    public static final int ID = 0;
-    public static final int TITULO = 1;
-    public static final int FECHA = 2;
-    public static final int HORARIO = 3;
-    public static final int FUNCIONARIO = 4;
-    public static final int ESTADO = 5;
+    private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM");
+    private static final Locale ES = Locale.forLanguageTag("es-CR");
 
-    private final String[] cols = {"ID", "Actividad", "Fecha", "Horario", "Funcionario", "Estado"};
-    private List<Reserva> filas;
+    private List<LocalTime> horas = Horarios.horasDelDia();
+    private LocalDate lunes;
+    private String[][] celdas = new String[0][7];
 
-    public TableModelActividades(List<Reserva> filas) {
-        this.filas = filas;
-    }
+    public void setDatos(LocalDate fechaReferencia, List<Reserva> reservas) {
+        this.horas = Horarios.horasDelDia();
+        this.lunes = fechaReferencia.with(DayOfWeek.MONDAY);
+        this.celdas = new String[horas.size()][7];
 
-    public List<Reserva> getFilas() { return filas; }
-
-    public void setFilas(List<Reserva> filas) {
-        this.filas = filas;
-        fireTableDataChanged();
-    }
-
-    public Reserva getRowAt(int row) {
-        if (filas != null && row >= 0 && row < filas.size()) return filas.get(row);
-        return null;
-    }
-
-    @Override
-    public int getRowCount() { return filas != null ? filas.size() : 0; }
-
-    @Override
-    public int getColumnCount() { return cols.length; }
-
-    @Override
-    public String getColumnName(int col) { return cols[col]; }
-
-    @Override
-    public Object getValueAt(int row, int col) {
-        Reserva r = filas.get(row);
-        switch (col) {
-            case ID: return r.getId();
-            case TITULO: return r.getTitulo() != null ? r.getTitulo() : "";
-            case FECHA: return r.getFecha() != null ? r.getFecha().toString() : "";
-            case HORARIO:
-                String ini = r.getHoraInicio() != null ? r.getHoraInicio().toString() : "";
-                String fin = r.getHoraFin() != null ? r.getHoraFin().toString() : "";
-                return ini + " - " + fin;
-            case FUNCIONARIO:
-                return r.getFuncionario() != null ? r.getFuncionario().getNombre() : "";
-            case ESTADO: return r.getEstado() != null ? r.getEstado() : "";
-            default: return "";
+        for (Reserva reserva : reservas) {
+            if (reserva == null || !reserva.isActiva() || reserva.getFecha() == null) continue;
+            int dia = (int) java.time.temporal.ChronoUnit.DAYS.between(lunes, reserva.getFecha());
+            if (dia < 0 || dia > 6) continue;
+            for (int f = 0; f < horas.size(); f++) {
+                if (reserva.cubreHora(horas.get(f))) {
+                    String actual = celdas[f][dia];
+                    String etiqueta = reserva.etiquetaCelda();
+                    celdas[f][dia] = (actual == null || actual.isBlank()) ? etiqueta : actual + " | " + etiqueta;
+                }
+            }
         }
+        fireTableStructureChanged();
+    }
+
+    public LocalDate getLunes() {
+        return lunes;
+    }
+
+    @Override
+    public int getRowCount() {
+        return horas.size();
+    }
+
+    @Override
+    public int getColumnCount() {
+        return 8;
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        if (column == 0) return "Hora";
+        if (lunes == null) return "";
+        LocalDate dia = lunes.plusDays(column - 1);
+        String nombre = dia.getDayOfWeek().getDisplayName(TextStyle.SHORT, ES);
+        return nombre + " " + dia.format(FMT_FECHA);
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        if (columnIndex == 0) {
+            return horas.get(rowIndex).format(FMT_HORA);
+        }
+        String valor = celdas[rowIndex][columnIndex - 1];
+        return valor != null ? valor : "";
+    }
+
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return false;
     }
 }

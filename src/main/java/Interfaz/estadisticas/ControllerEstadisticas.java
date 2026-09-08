@@ -1,18 +1,13 @@
 package Interfaz.estadisticas;
 
-import logic.Observer;
-import logic.Service;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.DefaultCategoryDataset;
-import utils.PDFGenerator;
+import com.github.lgooddatepicker.components.DatePicker;
 
+import javax.swing.*;
 import java.time.LocalDate;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ControllerEstadisticas implements Observer {
+public class ControllerEstadisticas {
 
     private final estadisticasView view;
     private final ModelEstadisticas model;
@@ -20,65 +15,70 @@ public class ControllerEstadisticas implements Observer {
     public ControllerEstadisticas(estadisticasView view, ModelEstadisticas model) {
         this.view = view;
         this.model = model;
-
-        registrarEventos();
-        Service.instance().addObserver(this);
-        cargarDatos();
+        if (view != null) view.setController(this);
+        cargarRecursos();
+        cargarActividades();
     }
 
-    private void registrarEventos() {
-        if (view.getCargarButton() != null) {
-            view.getCargarButton().addActionListener(e -> cargarDatos());
-        }
-        if (view.getBtnFiltrar() != null) {
-            view.getBtnFiltrar().addActionListener(e -> cargarDatos());
-        }
-        if (view.getBtnExportar() != null) {
-            view.getBtnExportar().addActionListener(e -> {
-                if (view.getTable() != null) {
-                    PDFGenerator.generarReporteTabla("Estadisticas", view.getTable());
-                }
-            });
-        }
+    public ControllerEstadisticas(ModelEstadisticas model) {
+        this(null, model);
     }
 
     public void cargarDatos() {
-        LocalDate desde = parseFecha(view.getTxtFechaDesde() != null ? view.getTxtFechaDesde().getText() : "");
-        LocalDate hasta = parseFecha(view.getTxtFechaHasta() != null ? view.getTxtFechaHasta().getText() : "");
-
-        Map<String, Integer> datosRecursos = model.getUsoCategoriasPorPeriodo(desde, hasta);
-        model.actualizarTablaRecursos(datosRecursos);
-
-        if (view.getTable() != null) {
-            view.getTable().setModel(model.getTableModel());
-        }
-
-        ChartPanel chart = generarGraficoRecursos(datosRecursos);
-        view.mostrarGrafico(chart);
+        cargarRecursos();
+        cargarActividades();
     }
 
-    private ChartPanel generarGraficoRecursos(Map<String, Integer> datos) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (Map.Entry<String, Integer> entry : datos.entrySet()) {
-            dataset.addValue(entry.getValue(), "Reservas", entry.getKey());
-        }
-        JFreeChart chart = ChartFactory.createBarChart(
-                "Categorías de Recursos Reservados", "Categoría", "Cantidad",
-                dataset, PlotOrientation.VERTICAL, false, true, false);
-        return new ChartPanel(chart);
-    }
-
-    private LocalDate parseFecha(String texto) {
-        if (texto == null || texto.trim().isEmpty()) return null;
+    public void cargarRecursos() {
         try {
-            return LocalDate.parse(texto.trim());
-        } catch (Exception e) {
-            return null;
+            LocalDate[] rango = leerRango(view.getDpRecursosDesde(), view.getDpRecursosHasta());
+            List<EstadisticaFila> filas = model.calcularRecursos(rango[0], rango[1]);
+            if (view.getTableRecursos() != null) {
+                view.getTableRecursos().setModel(model.getTableRecursos());
+            }
+            pintar(view.getChartRecursos(), "Recursos reservados", filas);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    @Override
-    public void update() {
-        cargarDatos();
+    public void cargarActividades() {
+        try {
+            LocalDate[] rango = leerRango(view.getDpActividadesDesde(), view.getDpActividadesHasta());
+            List<EstadisticaFila> filas = model.calcularActividades(rango[0], rango[1]);
+            if (view.getTableActividades() != null) {
+                view.getTableActividades().setModel(model.getTableActividades());
+            }
+            pintar(view.getChartActividades(), "Actividades por semana", filas);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private LocalDate[] leerRango(DatePicker desdeCampo, DatePicker hastaCampo) throws Exception {
+        LocalDate desde = desdeCampo != null ? desdeCampo.getDate() : null;
+        LocalDate hasta = hastaCampo != null ? hastaCampo.getDate() : null;
+        if (desde == null || hasta == null) {
+            throw new Exception("Seleccione las fechas desde y hasta.");
+        }
+        if (hasta.isBefore(desde)) {
+            throw new Exception("La fecha 'hasta' no puede ser anterior a 'desde'.");
+        }
+        return new LocalDate[]{desde, hasta};
+    }
+
+    private void pintar(BarChartPanel chart, String titulo, List<EstadisticaFila> filas) {
+        if (chart == null) return;
+        List<String> labels = new ArrayList<>();
+        List<Integer> valores = new ArrayList<>();
+        for (EstadisticaFila f : filas) {
+            labels.add(f.getEtiqueta());
+            valores.add(f.getCantidad());
+        }
+        chart.setDatos(titulo, labels, valores);
+    }
+
+    public ModelEstadisticas getModel() {
+        return model;
     }
 }

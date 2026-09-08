@@ -1,68 +1,30 @@
-package Interfaz.calendarizacion;
+package Interfaz.cambiarclave;
 
-import Interfaz.AbstractTableModelBase;
-import logic.Categoria;
-import logic.Recurso;
-import logic.Reserva;
+import logic.Usuario;
 
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
+import javax.swing.*;
 
-public class TableModelCalendarizacion extends AbstractTableModelBase<Reserva> {
+public class ControllerCambiarClave {
 
-    public static final int ID = 0;
-    public static final int TITULO = 1;
-    public static final int FECHA = 2;
-    public static final int HORA_INICIO = 3;
-    public static final int HORA_FIN = 4;
-    public static final int RECURSO = 5;
-    public static final int CATEGORIA = 6;
-    public static final int ESTADO = 7;
+    private final ModelCambiarClave model;
+    private final cambiarclaveView view;
 
-    private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");
-
-    public TableModelCalendarizacion(int[] cols, List<Reserva> rows) {
-        super(cols, rows);
+    public ControllerCambiarClave(cambiarclaveView view, Usuario usuario) {
+        this.view = view;
+        this.model = new ModelCambiarClave(usuario);
+        view.setController(this);
     }
 
-    @Override
-    protected void initColNames() {
-        colNames = new String[8];
-        colNames[ID] = "ID";
-        colNames[TITULO] = "Título";
-        colNames[FECHA] = "Fecha";
-        colNames[HORA_INICIO] = "Hora Inicio";
-        colNames[HORA_FIN] = "Hora Fin";
-        colNames[RECURSO] = "Recursos";
-        colNames[CATEGORIA] = "Categorías";
-        colNames[ESTADO] = "Estado";
-    }
-
-    @Override
-    protected Object getPropetyAt(Reserva r, int col) {
-        switch (cols[col]) {
-            case ID:
-                return r.getId();
-            case TITULO:
-                return r.getTitulo();
-            case FECHA:
-                return r.getFecha() != null ? r.getFecha().format(FMT_FECHA) : "";
-            case HORA_INICIO:
-                return r.getHoraInicio() != null ? r.getHoraInicio().format(FMT_HORA) : "";
-            case HORA_FIN:
-                return r.getHoraFin() != null ? r.getHoraFin().format(FMT_HORA) : "";
-            case RECURSO:
-                return r.getRecurso() != null ? r.getRecurso().getNombre() :
-                        (r.getRecursosAsignados() != null ? r.getRecursosAsignados().stream().map(Recurso::getNombre).collect(Collectors.joining(", ")) : "");
-            case CATEGORIA:
-                return r.getCategoria() != null ? r.getCategoria().getNombre() :
-                        (r.getCategoriasRequeridas() != null ? r.getCategoriasRequeridas().stream().map(Categoria::getNombre).collect(Collectors.joining(", ")) : "");
-            case ESTADO:
-                return r.getEstado();
-            default:
-                return "";
+    public void cambiar() {
+        String actual = new String(view.getClaveActual().getPassword());
+        String nueva = new String(view.getClaveNueva().getPassword());
+        String confirmar = new String(view.getClaveConfirmar().getPassword());
+        try {
+            model.cambiar(actual, nueva, confirmar);
+            JOptionPane.showMessageDialog(view, "Clave cambiada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            view.dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

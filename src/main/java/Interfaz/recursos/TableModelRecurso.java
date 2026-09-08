@@ -18,6 +18,7 @@ public class TableModelRecurso extends AbstractTableModel {
     }
 
     public Recurso getRowAt(int row) {
+        if (filas == null || row < 0 || row >= filas.size()) return null;
         return filas.get(row);
     }
 
@@ -43,7 +44,7 @@ public class TableModelRecurso extends AbstractTableModel {
             case 0:
                 return recurso.getId();
             case 1:
-                return recurso.getCategoria() != null ? recurso.getCategoria().getDescripcion() : "";
+                return recurso.getCategoria() != null ? recurso.getCategoria().getEtiqueta() : "";
             case 2:
                 return recurso.getDescripcion();
             default:

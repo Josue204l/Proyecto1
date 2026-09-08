@@ -6,32 +6,41 @@ import java.util.List;
 
 public class TableModelEstadisticas extends AbstractTableModel {
 
-    private List<String[]> filas;
-    private String[] columnas;
+    private final String[] cols;
+    private List<EstadisticaFila> filas;
 
-    public TableModelEstadisticas(List<String[]> filas) {
-        this.filas = filas != null ? filas : new ArrayList<>();
-        this.columnas = new String[]{"Categoría", "Cantidad de Reservas"};
+    public TableModelEstadisticas(String colEtiqueta, String colCantidad) {
+        this.cols = new String[]{colEtiqueta, colCantidad};
+        this.filas = new ArrayList<>();
     }
 
-    public void setFilasGenericas(List<String[]> filas, String[] columnas) {
+    public void setFilas(List<EstadisticaFila> filas) {
         this.filas = filas != null ? filas : new ArrayList<>();
-        this.columnas = columnas;
-        fireTableStructureChanged();
+        fireTableDataChanged();
+    }
+
+    public List<EstadisticaFila> getFilas() {
+        return filas;
     }
 
     @Override
-    public int getRowCount() { return filas.size(); }
+    public int getRowCount() {
+        return filas != null ? filas.size() : 0;
+    }
 
     @Override
-    public int getColumnCount() { return columnas.length; }
+    public int getColumnCount() {
+        return cols.length;
+    }
 
     @Override
-    public String getColumnName(int col) { return columnas[col]; }
+    public String getColumnName(int col) {
+        return cols[col];
+    }
 
     @Override
     public Object getValueAt(int row, int col) {
-        String[] fila = filas.get(row);
-        return (col < fila.length) ? fila[col] : "";
+        EstadisticaFila f = filas.get(row);
+        return col == 0 ? f.getEtiqueta() : f.getCantidad();
     }
 }

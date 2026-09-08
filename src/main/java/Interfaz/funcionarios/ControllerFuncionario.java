@@ -1,7 +1,12 @@
 package Interfaz.funcionarios;
 
+import Interfaz.util.Pdf;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 import logic.Funcionario;
-import utils.PDFGenerator;
 
 import javax.swing.*;
 
@@ -13,127 +18,118 @@ public class ControllerFuncionario {
     public ControllerFuncionario(funcionariosView view, ModelFuncionario model) {
         this.view = view;
         this.model = model;
-        registrarEventos();
-        actualizarTabla();
+        if (view != null) view.setController(this);
+        actualizarTabla(model.getFuncionarios());
     }
 
-    private void registrarEventos() {
-        if (view.getBuscarButton() != null) {
-            view.getBuscarButton().addActionListener(e -> buscar());
-        }
-        if (view.getGuardarButton() != null) {
-            view.getGuardarButton().addActionListener(e -> guardar());
-        }
-        if (view.getBorrarButton() != null) {
-            view.getBorrarButton().addActionListener(e -> borrar());
-        }
-        if (view.getLimpiarButton() != null) {
-            view.getLimpiarButton().addActionListener(e -> limpiar());
-        }
-        if (view.getImprimirButton() != null) {
-            view.getImprimirButton().addActionListener(e -> imprimirPDF());
-        }
-
-        if (view.getTablaFuncionarios() != null) {
-            view.getTablaFuncionarios().getSelectionModel().addListSelectionListener(e -> {
-                if (!e.getValueIsAdjusting()) {
-                    cargarSeleccionado();
-                }
-            });
-        }
+    public ControllerFuncionario(ModelFuncionario model) {
+        this(null, model);
     }
 
-    private void buscar() {
-        String idBuscado = view.getTxtBuscarId() != null ? view.getTxtBuscarId().getText().trim() : "";
-        String nombreBuscado = view.getTxtBuscarNombre() != null ? view.getTxtBuscarNombre().getText().trim() : "";
-        model.buscar(idBuscado, nombreBuscado);
-        actualizarTabla();
-    }
-
-    private void guardar() {
+    public void guardar() {
         try {
-            String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
-            String nombre = view.getTxtNombre() != null ? view.getTxtNombre().getText().trim() : "";
-            String telefono = view.getTxtTelefono() != null ? view.getTxtTelefono().getText().trim() : "";
-
-            if (id.isEmpty()) throw new Exception("El ID es obligatorio.");
-            if (nombre.isEmpty()) throw new Exception("El nombre es obligatorio.");
-
-            // Si es un nuevo funcionario, la clave inicial es su ID
-            Funcionario f = new Funcionario(id, id, "FUNCIONARIO", nombre, telefono);
-            model.guardar(f);
-            actualizarTabla();
+            String id = texto(view.getTxtId());
+            String nombre = texto(view.getTxtNombre());
+            String telefono = texto(view.getTxtTelefono());
+            if (id.isEmpty()) throw new Exception("El ID o cédula del funcionario es obligatorio.");
+            if (nombre.isEmpty()) throw new Exception("El nombre del funcionario es obligatorio.");
+            Funcionario funcionario = new Funcionario(id, id, "FUNCIONARIO", nombre, telefono);
+            model.guardar(funcionario);
+            actualizarTabla(model.getFuncionarios());
             limpiar();
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Funcionario guardado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Funcionario guardado.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void borrar() {
-        String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
+    public void eliminar() {
+        String id = texto(view.getTxtId());
+        if (id.isEmpty() && view.getTable() != null && view.getTable().getSelectedRow() >= 0) {
+            id = String.valueOf(view.getTable().getValueAt(view.getTable().getSelectedRow(), 0));
+        }
         if (id.isEmpty()) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione o ingrese un funcionario para borrar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione un funcionario.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
-        if ("1234".equals(id)) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "No se puede eliminar el usuario Administrador principal.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(), "¿Desea eliminar al funcionario " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                if (model.eliminar(id)) {
-                    actualizarTabla();
-                    limpiar();
-                    JOptionPane.showMessageDialog(view.getMainPanel(), "Funcionario eliminado.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(view.getMainPanel(), "No se encontró el funcionario especificado.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(),
+                "¿Borrar el funcionario " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+        try {
+            model.eliminar(id);
+            actualizarTabla(model.getFuncionarios());
+            limpiar();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void cargarSeleccionado() {
-        if (view.getTablaFuncionarios() == null) return;
-        int row = view.getTablaFuncionarios().getSelectedRow();
-        if (row >= 0) {
-            String id = (String) view.getTablaFuncionarios().getValueAt(row, 0);
-            Funcionario f = model.getFuncionarios().stream().filter(func -> func.getId().equals(id)).findFirst().orElse(null);
-            if (f != null) {
-                if (view.getTxtId() != null) view.getTxtId().setText(f.getId());
-                if (view.getTxtNombre() != null) view.getTxtNombre().setText(f.getNombre());
-                if (view.getTxtTelefono() != null) view.getTxtTelefono().setText(f.getTelefono());
-            }
-        }
+    public void buscar() {
+        actualizarTabla(model.buscar(texto(view.getTxtBuscarId()), texto(view.getTxtBuscarNombre())));
     }
 
-    private void limpiar() {
-        if (view.getTxtBuscarId() != null) view.getTxtBuscarId().setText("");
-        if (view.getTxtBuscarNombre() != null) view.getTxtBuscarNombre().setText("");
-        if (view.getTxtId() != null) view.getTxtId().setText("");
+    public void cargarSeleccionado() {
+        if (view.getTable() == null) return;
+        int fila = view.getTable().getSelectedRow();
+        Funcionario f = model.getTableModel().getRowAt(fila);
+        if (f == null) return;
+        view.getTxtId().setText(f.getId());
+        view.getTxtNombre().setText(f.getNombre());
+        view.getTxtTelefono().setText(f.getTelefono() != null ? f.getTelefono() : "");
+        view.getTxtId().setEditable(false);
+    }
+
+    public void limpiar() {
+        if (view.getTxtId() != null) {
+            view.getTxtId().setText("");
+            view.getTxtId().setEditable(true);
+        }
         if (view.getTxtNombre() != null) view.getTxtNombre().setText("");
         if (view.getTxtTelefono() != null) view.getTxtTelefono().setText("");
-        if (view.getTablaFuncionarios() != null) view.getTablaFuncionarios().clearSelection();
-        model.restablecerFiltro();
-        actualizarTabla();
+        if (view.getTable() != null) view.getTable().clearSelection();
     }
 
-    private void imprimirPDF() {
-        if (view.getTablaFuncionarios() != null) {
-            PDFGenerator.generarReporteTabla("Listado de Funcionarios", view.getTablaFuncionarios());
+    private void actualizarTabla(java.util.List<Funcionario> lista) {
+        if (view != null && view.getTable() != null) {
+            model.mostrar(lista);
+            view.getTable().setModel(model.getTableModel());
         }
     }
 
-    private void actualizarTabla() {
-        if (view.getTablaFuncionarios() != null) {
-            view.getTablaFuncionarios().setModel(model.getTableModel());
+    private String texto(JTextField campo) {
+        return campo == null || campo.getText() == null ? "" : campo.getText().trim();
+    }
+
+    public void print() {
+        try {
+            String dest = "funcionarios.pdf";
+            PdfWriter writer = new PdfWriter(dest);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+            document.add(new Paragraph("Listado de Funcionarios"));
+            JTable tabla = view.getTable();
+            if (tabla != null && tabla.getColumnCount() > 0) {
+                Table table = new Table(tabla.getColumnCount());
+                for (int c = 0; c < tabla.getColumnCount(); c++) {
+                    table.addHeaderCell(Pdf.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
+                }
+                for (int r = 0; r < tabla.getRowCount(); r++) {
+                    for (int c = 0; c < tabla.getColumnCount(); c++) {
+                        Object val = tabla.getValueAt(r, c);
+                        table.addCell(Pdf.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
+                    }
+                }
+                document.add(table);
+            }
+            document.close();
+            Pdf.openPdf(dest);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    public ModelFuncionario getModel() { return model; }
+    public ModelFuncionario getModel() {
+        return model;
+    }
 }

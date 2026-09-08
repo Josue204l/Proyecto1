@@ -6,6 +6,8 @@ import Interfaz.actividades.actividadesView;
 import Interfaz.calendarizacion.ControllerCalendarizacion;
 import Interfaz.calendarizacion.ModelCalendarizacion;
 import Interfaz.calendarizacion.calendarizacionView;
+import Interfaz.cambiarclave.ControllerCambiarClave;
+import Interfaz.cambiarclave.cambiarclaveView;
 import Interfaz.categorias.ControllerCategoria;
 import Interfaz.categorias.ModelCategoria;
 import Interfaz.categorias.categoriasView;
@@ -15,108 +17,109 @@ import Interfaz.estadisticas.estadisticasView;
 import Interfaz.funcionarios.ControllerFuncionario;
 import Interfaz.funcionarios.ModelFuncionario;
 import Interfaz.funcionarios.funcionariosView;
+import Interfaz.login.ControllerLogin;
+import Interfaz.login.LoginView;
+import Interfaz.login.ModelLogin;
 import Interfaz.recursos.ControllerRecurso;
 import Interfaz.recursos.ModelRecurso;
 import Interfaz.recursos.recursosView;
 import Interfaz.reservas.ControllerReserva;
 import Interfaz.reservas.reservasView;
-import Interfaz.cambiarclave.ControllerCambiarClave;
-import Interfaz.cambiarclave.cambiarclaveView;
 
 import logic.Funcionario;
+import logic.Sesion;
 import logic.Usuario;
 
 import javax.swing.*;
 
 public class MainFrame extends JFrame {
 
-    private final Usuario usuarioActual;
-
     public MainFrame(Usuario usuario) {
         super("SISTEMA DE RESERVAS - " + usuario.getId() + " (" + usuario.getRol() + ")");
-        this.usuarioActual = usuario;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        setJMenuBar(crearMenuBar());
 
         JTabbedPane tabbedPane = new JTabbedPane();
         boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol());
-
         Funcionario funcionarioActual = (usuario instanceof Funcionario) ? (Funcionario) usuario : null;
 
-        // 1. Pestañas de ADMINISTRADOR
         if (esAdmin) {
             funcionariosView vFunc = new funcionariosView();
-            new ControllerFuncionario(vFunc, new ModelFuncionario());
+            ModelFuncionario mFunc = new ModelFuncionario();
+            new ControllerFuncionario(vFunc, mFunc);
             tabbedPane.addTab("Funcionarios", vFunc.getMainPanel());
 
             categoriasView vCat = new categoriasView();
-            new ControllerCategoria(vCat, new ModelCategoria());
+            ModelCategoria mCat = new ModelCategoria();
+            new ControllerCategoria(vCat, mCat);
             tabbedPane.addTab("Categorías", vCat.getMainPanel());
 
             recursosView vRec = new recursosView();
-            new ControllerRecurso(vRec, new ModelRecurso());
+            ModelRecurso mRec = new ModelRecurso();
+            new ControllerRecurso(vRec, mRec);
             tabbedPane.addTab("Recursos", vRec.getMainPanel());
         }
 
-        // 2. Pestaña de FUNCIONARIO (solo funcionarios no-admin)
-        if (funcionarioActual != null && !esAdmin) {
+        if (!esAdmin && funcionarioActual != null) {
             reservasView vRes = new reservasView();
             new ControllerReserva(vRes, funcionarioActual);
             tabbedPane.addTab("Mis Reservas", vRes.getMainPanel());
         }
 
-        // 3. Calendarización (todos)
         calendarizacionView vCal = new calendarizacionView();
-        new ControllerCalendarizacion(vCal, new ModelCalendarizacion(), funcionarioActual);
+        ModelCalendarizacion mCal = new ModelCalendarizacion();
+        new ControllerCalendarizacion(vCal, mCal);
         tabbedPane.addTab("Calendarización", vCal.getMainPanel());
 
-        // 4. Actividades (todos)
         actividadesView vAct = new actividadesView();
-        new ControllerActividades(vAct, new ModelActividades());
-        tabbedPane.addTab("Actividades", vAct.getMainPanel() != null ? vAct.getMainPanel() : new javax.swing.JPanel());
+        ModelActividades mAct = new ModelActividades();
+        new ControllerActividades(vAct, mAct);
+        tabbedPane.addTab("Actividades", vAct.getMainPanel());
 
-        // 5. Estadísticas (todos)
         estadisticasView vEst = new estadisticasView();
-        new ControllerEstadisticas(vEst, new ModelEstadisticas());
+        ModelEstadisticas mEst = new ModelEstadisticas();
+        new ControllerEstadisticas(vEst, mEst);
         tabbedPane.addTab("Estadísticas", vEst.getMainPanel());
 
+        setJMenuBar(crearMenu(usuario));
         setContentPane(tabbedPane);
-        setSize(1000, 720);
+        setSize(1100, 760);
         setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    private JMenuBar crearMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        JMenu menuOpciones = new JMenu("Opciones");
+    private JMenuBar crearMenu(Usuario usuario) {
+        JMenuBar bar = new JMenuBar();
+        JMenu archivo = new JMenu("Archivo");
 
-        JMenuItem itemCambiarClave = new JMenuItem("Cambiar Clave");
-        itemCambiarClave.addActionListener(e -> abrirDialogoCambiarClave());
-
-        JMenuItem itemCerrarSesion = new JMenuItem("Cerrar Sesión");
-        itemCerrarSesion.addActionListener(e -> {
-            this.dispose();
-            try {
-                Class<?> loginViewClass = Class.forName("Interfaz.login.LoginView");
-                JFrame loginFrame = (JFrame) loginViewClass.getDeclaredConstructor().newInstance();
-                loginFrame.setVisible(true);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Por favor, reinicie la aplicación para iniciar sesión nuevamente.");
-            }
+        JMenuItem cambiar = new JMenuItem("Cambiar clave");
+        cambiar.addActionListener(e -> {
+            cambiarclaveView dialogo = new cambiarclaveView(this);
+            new ControllerCambiarClave(dialogo, usuario);
+            dialogo.setVisible(true);
         });
 
-        menuOpciones.add(itemCambiarClave);
-        menuOpciones.addSeparator();
-        menuOpciones.add(itemCerrarSesion);
-        menuBar.add(menuOpciones);
+        JMenuItem cerrar = new JMenuItem("Cerrar sesión");
+        cerrar.addActionListener(e -> cerrarSesion());
 
-        return menuBar;
+        JMenuItem salir = new JMenuItem("Salir");
+        salir.addActionListener(e -> System.exit(0));
+
+        archivo.add(cambiar);
+        archivo.add(cerrar);
+        archivo.addSeparator();
+        archivo.add(salir);
+        bar.add(archivo);
+        return bar;
     }
 
-    private void abrirDialogoCambiarClave() {
-        cambiarclaveView dialog = new cambiarclaveView(this);
-        new ControllerCambiarClave(dialog, usuarioActual);
-        dialog.setVisible(true);
+    private void cerrarSesion() {
+        Sesion.logout();
+        dispose();
+        LoginView loginView = new LoginView(null);
+        new ControllerLogin(new ModelLogin(), loginView);
+        loginView.setVisible(true);
+        if (Sesion.isLoggedIn()) {
+            new MainFrame(Sesion.getUsuario());
+        }
     }
 }

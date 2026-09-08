@@ -1,154 +1,197 @@
 package Interfaz.recursos;
 
+import Interfaz.util.Pdf;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 import logic.Categoria;
 import logic.Recurso;
-import utils.PDFGenerator;
 
 import javax.swing.*;
+import java.util.List;
 
 public class ControllerRecurso {
-
     private final recursosView view;
     private final ModelRecurso model;
 
     public ControllerRecurso(recursosView view, ModelRecurso model) {
         this.view = view;
         this.model = model;
-        poblarCombos();
-        registrarEventos();
-        actualizarTabla();
+        cargarCombos();
+        if (view != null) view.setController(this);
+        actualizarTabla(model.getRecursos());
     }
 
-    private void poblarCombos() {
+    public ControllerRecurso(ModelRecurso model) {
+        this(null, model);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void cargarCombos() {
+        if (view == null) return;
+        DefaultComboBoxModel<Categoria> filtro = new DefaultComboBoxModel<>();
+        filtro.addElement(null);
+        DefaultComboBoxModel<Categoria> form = new DefaultComboBoxModel<>();
+        for (Categoria c : model.getCategorias()) {
+            filtro.addElement(c);
+            form.addElement(c);
+        }
         if (view.getCmbFiltroCategoria() != null) {
-            DefaultComboBoxModel<Categoria> comboModel = new DefaultComboBoxModel<>();
-            for (Categoria c : model.getCategorias()) {
-                comboModel.addElement(c);
-            }
-            view.getCmbFiltroCategoria().setModel(comboModel);
-        }
-
-        if (view.getCmbCategoriaForm() != null) {
-            DefaultComboBoxModel<Categoria> comboModel = new DefaultComboBoxModel<>();
-            for (Categoria c : model.getCategorias()) {
-                comboModel.addElement(c);
-            }
-            view.getCmbCategoriaForm().setModel(comboModel);
-        }
-    }
-
-    private void registrarEventos() {
-        if (view.getBuscarButton() != null) {
-            view.getBuscarButton().addActionListener(e -> buscar());
-        }
-        if (view.getGuardarButton() != null) {
-            view.getGuardarButton().addActionListener(e -> guardar());
-        }
-        if (view.getBorrarButton() != null) {
-            view.getBorrarButton().addActionListener(e -> borrar());
-        }
-        if (view.getLimpiarButton() != null) {
-            view.getLimpiarButton().addActionListener(e -> limpiar());
-        }
-        if (view.getImprimirButton() != null) {
-            view.getImprimirButton().addActionListener(e -> imprimirPDF());
-        }
-
-        if (view.getTablaRecursos() != null) {
-            view.getTablaRecursos().getSelectionModel().addListSelectionListener(e -> {
-                if (!e.getValueIsAdjusting()) {
-                    cargarSeleccionado();
+            view.getCmbFiltroCategoria().setModel(filtro);
+            view.getCmbFiltroCategoria().setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public java.awt.Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    setText(value == null ? "Todas" : value.toString());
+                    return this;
                 }
             });
         }
+        if (view.getCmbCategoria() != null) {
+            view.getCmbCategoria().setModel(form);
+        }
     }
 
-    private void buscar() {
-        Categoria cat = (Categoria) (view.getCmbFiltroCategoria() != null ? view.getCmbFiltroCategoria().getSelectedItem() : null);
-        String desc = view.getTxtBuscarDescripcion() != null ? view.getTxtBuscarDescripcion().getText().trim() : "";
-        model.buscar(cat, desc);
-        actualizarTabla();
+    public void buscar() {
+        Categoria cat = null;
+        if (view.getCmbFiltroCategoria() != null && view.getCmbFiltroCategoria().getSelectedItem() instanceof Categoria c) {
+            cat = c;
+        }
+        String desc = view.getTxtBuscar() != null ? view.getTxtBuscar().getText() : "";
+        actualizarTabla(model.filtrar(cat, desc));
     }
 
-    private void guardar() {
+    public void guardar() {
         try {
             String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
-            String descripcion = view.getTxtDescripcion() != null ? view.getTxtDescripcion().getText().trim() : "";
-            Categoria cat = (Categoria) (view.getCmbCategoriaForm() != null ? view.getCmbCategoriaForm().getSelectedItem() : null);
-
-            if (id.isEmpty()) throw new Exception("El ID o número de activo es obligatorio.");
-            if (descripcion.isEmpty()) throw new Exception("La descripción es obligatoria.");
-            if (cat == null) throw new Exception("Debe seleccionar una categoría.");
-
-            // CORREGIDO: (id, descripcion, categoria)
-            Recurso recurso = new Recurso(id, descripcion, cat);
+            String desc = view.getTxtDescripcion() != null ? view.getTxtDescripcion().getText().trim() : "";
+            Categoria cat = null;
+            if (view.getCmbCategoria() != null && view.getCmbCategoria().getSelectedItem() instanceof Categoria c) {
+                cat = c;
+            }
+            Recurso recurso = new Recurso(id, desc, cat);
+            if (recurso.getId() == null || recurso.getId().isBlank()) {
+                throw new Exception("El ID o número de activo es obligatorio.");
+            }
+            if (recurso.getDescripcion() == null || recurso.getDescripcion().isBlank()) {
+                throw new Exception("La descripción es obligatoria.");
+            }
+            if (recurso.getCategoria() == null) {
+                throw new Exception("Debe seleccionar una categoría.");
+            }
             model.guardar(recurso);
-            actualizarTabla();
+            actualizarTabla(model.getRecursos());
             limpiar();
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Recurso guardado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Recurso guardado.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    private void borrar() {
+
+    public void eliminar() {
         String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
+        if (id.isEmpty() && view.getTable() != null && view.getTable().getSelectedRow() >= 0) {
+            id = String.valueOf(view.getTable().getValueAt(view.getTable().getSelectedRow(), 0));
+        }
         if (id.isEmpty()) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione un recurso para borrar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione un recurso.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
-        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(), "¿Desea eliminar el recurso " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                if (model.eliminar(id)) {
-                    actualizarTabla();
-                    limpiar();
-                    JOptionPane.showMessageDialog(view.getMainPanel(), "Recurso eliminado.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(view.getMainPanel(), "No se encontró el recurso especificado.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(),
+                "¿Borrar el recurso " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+        try {
+            model.eliminar(id);
+            actualizarTabla(model.getRecursos());
+            limpiar();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void cargarSeleccionado() {
-        if (view.getTablaRecursos() == null) return;
-        int row = view.getTablaRecursos().getSelectedRow();
-        if (row >= 0) {
-            String id = (String) view.getTablaRecursos().getValueAt(row, 0);
-            Recurso r = model.getRecursos().stream().filter(rec -> rec.getId().equals(id)).findFirst().orElse(null);
-            if (r != null) {
-                if (view.getTxtId() != null) view.getTxtId().setText(r.getId());
-                if (view.getTxtDescripcion() != null) view.getTxtDescripcion().setText(r.getDescripcion());
-                if (view.getCmbCategoriaForm() != null && r.getCategoria() != null) {
-                    view.getCmbCategoriaForm().setSelectedItem(r.getCategoria());
+    public void cargarSeleccionado() {
+        if (view.getTable() == null) return;
+        int fila = view.getTable().getSelectedRow();
+        Recurso r = model.getTableModel().getRowAt(fila);
+        if (r == null) return;
+        view.getTxtId().setText(r.getId());
+        view.getTxtDescripcion().setText(r.getDescripcion());
+        if (view.getCmbCategoria() != null && r.getCategoria() != null) {
+            ComboBoxModel<?> combo = view.getCmbCategoria().getModel();
+            for (int i = 0; i < combo.getSize(); i++) {
+                Object item = combo.getElementAt(i);
+                if (item instanceof Categoria c && r.getCategoria().getId().equals(c.getId())) {
+                    view.getCmbCategoria().setSelectedIndex(i);
+                    break;
                 }
             }
         }
+        view.getTxtId().setEditable(false);
     }
 
-    private void limpiar() {
-        if (view.getTxtBuscarDescripcion() != null) view.getTxtBuscarDescripcion().setText("");
-        if (view.getTxtId() != null) view.getTxtId().setText("");
+    public void limpiar() {
+        if (view.getTxtId() != null) {
+            view.getTxtId().setText("");
+            view.getTxtId().setEditable(true);
+        }
         if (view.getTxtDescripcion() != null) view.getTxtDescripcion().setText("");
-        if (view.getTablaRecursos() != null) view.getTablaRecursos().clearSelection();
-        model.restablecerFiltro();
-        actualizarTabla();
+        if (view.getCmbCategoria() != null && view.getCmbCategoria().getItemCount() > 0) {
+            view.getCmbCategoria().setSelectedIndex(0);
+        }
+        if (view.getTable() != null) view.getTable().clearSelection();
     }
 
-    private void imprimirPDF() {
-        if (view.getTablaRecursos() != null) {
-            PDFGenerator.generarReporteTabla("Listado de Recursos", view.getTablaRecursos());
+    private void actualizarTabla(List<Recurso> lista) {
+        if (view != null && view.getTable() != null) {
+            model.mostrar(lista);
+            view.getTable().setModel(model.getTableModel());
         }
     }
 
-    private void actualizarTabla() {
-        if (view.getTablaRecursos() != null) {
-            view.getTablaRecursos().setModel(model.getTableModel());
-        }
+    public List<Recurso> buscarPorCategoria(Categoria categoria) {
+        return model.getRecursosPorCategoria(categoria);
     }
 
-    public ModelRecurso getModel() { return model; }
+    public void guardar(Recurso recurso) throws Exception {
+        model.guardar(recurso);
+    }
+
+    public boolean eliminar(String id) throws Exception {
+        return model.eliminar(id);
+    }
+
+    public List<Categoria> getCategorias() {
+        return model.getCategorias();
+    }
+
+    public void print() {
+        try {
+            String dest = "recursos.pdf";
+            PdfWriter writer = new PdfWriter(dest);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+            document.add(new Paragraph("Listado de Recursos"));
+            JTable tabla = view.getTable();
+            if (tabla != null && tabla.getColumnCount() > 0) {
+                Table table = new Table(tabla.getColumnCount());
+                for (int c = 0; c < tabla.getColumnCount(); c++) {
+                    table.addHeaderCell(Pdf.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
+                }
+                for (int r = 0; r < tabla.getRowCount(); r++) {
+                    for (int c = 0; c < tabla.getColumnCount(); c++) {
+                        Object val = tabla.getValueAt(r, c);
+                        table.addCell(Pdf.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
+                    }
+                }
+                document.add(table);
+            }
+            document.close();
+            Pdf.openPdf(dest);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 }

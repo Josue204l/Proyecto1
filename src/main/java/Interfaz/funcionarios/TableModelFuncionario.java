@@ -9,9 +9,9 @@ public class TableModelFuncionario extends AbstractTableModel {
 
     public static final int ID = 0;
     public static final int NOMBRE = 1;
-    public static final int PUESTO = 2;
+    public static final int TELEFONO = 2;
 
-    private final String[] cols = {"ID / Cédula", "Nombre", "Puesto"};
+    private final String[] cols = {"ID", "Nombre", "Teléfono"};
     private List<Funcionario> filas;
 
     public TableModelFuncionario(List<Funcionario> filas) {
@@ -28,6 +28,7 @@ public class TableModelFuncionario extends AbstractTableModel {
     }
 
     public Funcionario getRowAt(int row) {
+        if (filas == null || row < 0 || row >= filas.size()) return null;
         return filas.get(row);
     }
 
@@ -52,7 +53,7 @@ public class TableModelFuncionario extends AbstractTableModel {
         switch (col) {
             case ID: return f.getId();
             case NOMBRE: return f.getNombre();
-            case PUESTO: return f.getPuesto();
+            case TELEFONO: return f.getTelefono();
             default: return "";
         }
     }

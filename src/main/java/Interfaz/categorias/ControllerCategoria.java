@@ -1,7 +1,12 @@
 package Interfaz.categorias;
 
+import Interfaz.util.Pdf;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 import logic.Categoria;
-import utils.PDFGenerator;
 
 import javax.swing.*;
 
@@ -13,119 +18,110 @@ public class ControllerCategoria {
     public ControllerCategoria(categoriasView view, ModelCategoria model) {
         this.view = view;
         this.model = model;
-        registrarEventos();
-        actualizarTabla();
+        if (view != null) view.setController(this);
+        actualizarTabla(model.getCategorias());
     }
 
-    private void registrarEventos() {
-        if (view.getBuscarButton() != null) {
-            view.getBuscarButton().addActionListener(e -> buscar());
-        }
-        if (view.getGuardarButton() != null) {
-            view.getGuardarButton().addActionListener(e -> guardar());
-        }
-        if (view.getBorrarButton() != null) {
-            view.getBorrarButton().addActionListener(e -> borrar());
-        }
-        if (view.getLimpiarButton() != null) {
-            view.getLimpiarButton().addActionListener(e -> limpiar());
-        }
-        if (view.getImprimirButton() != null) {
-            view.getImprimirButton().addActionListener(e -> imprimirPDF());
-        }
-
-        if (view.getTablaCategorias() != null) {
-            view.getTablaCategorias().getSelectionModel().addListSelectionListener(e -> {
-                if (!e.getValueIsAdjusting()) {
-                    cargarSeleccionado();
-                }
-            });
-        }
+    public ControllerCategoria(ModelCategoria model) {
+        this(null, model);
     }
 
-    private void buscar() {
-        String descripcion = view.getTxtBuscarDescripcion() != null ? view.getTxtBuscarDescripcion().getText().trim() : "";
-        model.buscar(descripcion);
-        actualizarTabla();
-    }
-
-    private void guardar() {
+    public void guardar() {
         try {
-            String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
-            String descripcion = view.getTxtDescripcion() != null ? view.getTxtDescripcion().getText().trim() : "";
-
-            if (descripcion.isEmpty()) throw new Exception("La descripción de la categoría es obligatoria.");
-
-            if (id.isEmpty()) {
-                id = model.generarNuevoId();
-            }
-
-            Categoria cat = new Categoria(id, descripcion, descripcion);
-            model.guardar(cat);
-            actualizarTabla();
+            Categoria categoria = new Categoria(
+                    texto(view.getTxtId()),
+                    texto(view.getTxtDescripcion()),
+                    texto(view.getTxtDescripcion())
+            );
+            model.guardar(categoria);
+            actualizarTabla(model.getCategorias());
             limpiar();
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Categoría guardada exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Categoría guardada.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void borrar() {
-        String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
+    public void eliminar() {
+        String id = texto(view.getTxtId());
+        if (id.isEmpty() && view.getTable() != null && view.getTable().getSelectedRow() >= 0) {
+            id = String.valueOf(view.getTable().getValueAt(view.getTable().getSelectedRow(), 0));
+        }
         if (id.isEmpty()) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione una categoría para borrar.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione una categoría.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-
-        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(), "¿Desea eliminar la categoría " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                if (model.eliminar(id)) {
-                    actualizarTabla();
-                    limpiar();
-                    JOptionPane.showMessageDialog(view.getMainPanel(), "Categoría eliminada.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(view.getMainPanel(), "No se encontró la categoría especificada.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(),
+                "¿Borrar la categoría " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+        try {
+            model.eliminar(id);
+            actualizarTabla(model.getCategorias());
+            limpiar();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void cargarSeleccionado() {
-        if (view.getTablaCategorias() == null) return;
-        int row = view.getTablaCategorias().getSelectedRow();
-        if (row >= 0) {
-            String id = (String) view.getTablaCategorias().getValueAt(row, 0);
-            Categoria c = model.getCategorias().stream().filter(cat -> cat.getId().equals(id)).findFirst().orElse(null);
-            if (c != null) {
-                if (view.getTxtId() != null) view.getTxtId().setText(c.getId());
-                if (view.getTxtDescripcion() != null) view.getTxtDescripcion().setText(c.getDescripcion());
-            }
-        }
+    public void buscar() {
+        actualizarTabla(model.buscar(texto(view.getTxtBuscar())));
     }
 
-    private void limpiar() {
-        if (view.getTxtBuscarDescripcion() != null) view.getTxtBuscarDescripcion().setText("");
+    public void cargarSeleccionado() {
+        int fila = view.getTable().getSelectedRow();
+        Categoria c = model.getTableModel().getRowAt(fila);
+        if (c == null) return;
+        view.getTxtId().setText(c.getId());
+        view.getTxtDescripcion().setText(c.getEtiqueta());
+    }
+
+    public void limpiar() {
         if (view.getTxtId() != null) view.getTxtId().setText("");
         if (view.getTxtDescripcion() != null) view.getTxtDescripcion().setText("");
-        if (view.getTablaCategorias() != null) view.getTablaCategorias().clearSelection();
-        model.restablecerFiltro();
-        actualizarTabla();
+        if (view.getTable() != null) view.getTable().clearSelection();
     }
 
-    private void imprimirPDF() {
-        if (view.getTablaCategorias() != null) {
-            PDFGenerator.generarReporteTabla("Listado de Categorías", view.getTablaCategorias());
+    private void actualizarTabla(java.util.List<Categoria> lista) {
+        if (view != null && view.getTable() != null) {
+            model.mostrar(lista);
+            view.getTable().setModel(model.getTableModel());
         }
     }
 
-    private void actualizarTabla() {
-        if (view.getTablaCategorias() != null) {
-            view.getTablaCategorias().setModel(model.getTableModel());
+    private String texto(JTextField campo) {
+        return campo == null || campo.getText() == null ? "" : campo.getText().trim();
+    }
+
+    public void print() {
+        try {
+            String dest = "categorias.pdf";
+            PdfWriter writer = new PdfWriter(dest);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+            document.add(new Paragraph("Listado de Categorías"));
+            JTable tabla = view.getTable();
+            if (tabla != null && tabla.getColumnCount() > 0) {
+                Table table = new Table(tabla.getColumnCount());
+                for (int c = 0; c < tabla.getColumnCount(); c++) {
+                    table.addHeaderCell(Pdf.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
+                }
+                for (int r = 0; r < tabla.getRowCount(); r++) {
+                    for (int c = 0; c < tabla.getColumnCount(); c++) {
+                        Object val = tabla.getValueAt(r, c);
+                        table.addCell(Pdf.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
+                    }
+                }
+                document.add(table);
+            }
+            document.close();
+            Pdf.openPdf(dest);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    public ModelCategoria getModel() { return model; }
+    public ModelCategoria getModel() {
+        return model;
+    }
 }

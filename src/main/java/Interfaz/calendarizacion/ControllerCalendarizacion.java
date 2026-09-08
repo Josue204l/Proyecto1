@@ -1,90 +1,96 @@
 package Interfaz.calendarizacion;
 
-import data.Data;
+import Interfaz.util.Pdf;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 import logic.Categoria;
-import logic.Observer;
-import logic.Reserva;
-import logic.Service;
-import logic.Funcionario;
-import utils.PDFGenerator;
 
 import javax.swing.*;
 import java.time.LocalDate;
-import java.util.List;
 
-public class ControllerCalendarizacion implements Observer {
+public class ControllerCalendarizacion {
 
-    private final calendarizacionView view;
     private final ModelCalendarizacion model;
-    private final Funcionario funcionario;
+    private final calendarizacionView view;
 
-    public ControllerCalendarizacion(calendarizacionView view, ModelCalendarizacion model, Funcionario funcionario) {
+    public ControllerCalendarizacion(calendarizacionView view, ModelCalendarizacion model) {
         this.view = view;
         this.model = model;
-        this.funcionario = funcionario;
-
         this.view.setController(this);
-        this.view.setModel(this.model);
-
-        // Poblar combo de categorías
-        poblarComboCategorias();
-
-        registrarEventos();
-        Service.instance().addObserver(this);
-        filtrar();
+        inicializar();
     }
 
-    private void poblarComboCategorias() {
-        if (view.getCmbCategoria() != null) {
-            DefaultComboBoxModel<Categoria> comboModel = new DefaultComboBoxModel<>();
-            comboModel.addElement(null); // opción "Todas"
-            for (Categoria c : Data.getInstancia().getCategorias()) {
-                comboModel.addElement(c);
-            }
-            view.getCmbCategoria().setModel(comboModel);
-        }
+    public ControllerCalendarizacion(calendarizacionView view, ModelCalendarizacion model, logic.Funcionario ignorado) {
+        this(view, model);
     }
 
-    private void registrarEventos() {
-        if (view.getBtnCargar() != null) {
-            view.getBtnCargar().addActionListener(e -> filtrar());
-        }
-        if (view.getBtnImprimir() != null) {
-            view.getBtnImprimir().addActionListener(e ->
-                PDFGenerator.generarReporteTabla("Reporte_Calendarizacion", view.getTblCalendarizacion()));
+    private void inicializar() {
+        view.cargarCategorias(model.getCategorias());
+        if (view.getTblCalendarizacion() != null) {
+            view.getTblCalendarizacion().setModel(model.getTableModel());
+            view.getTblCalendarizacion().setRowHeight(28);
+            view.getTblCalendarizacion().setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         }
     }
 
     public void filtrar() {
-        LocalDate fecha = null;
-        if (view.getTxtFecha() != null && !view.getTxtFecha().getText().trim().isEmpty()) {
-            try {
-                fecha = LocalDate.parse(view.getTxtFecha().getText().trim());
-            } catch (Exception ignored) {}
+        LocalDate fecha = view.getDatePicker() != null ? view.getDatePicker().getDate() : null;
+        Object seleccionCat = view.getCmbCategoria().getSelectedItem();
+        Categoria categoriaSeleccionada = (seleccionCat instanceof Categoria) ? (Categoria) seleccionCat : null;
+
+        if (fecha == null || categoriaSeleccionada == null) {
+            JOptionPane.showMessageDialog(view.getMainPanel(),
+                    "Seleccione una fecha y una categoría.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            return;
         }
 
-        Categoria categoria = null;
-        if (view.getCmbCategoria() != null) {
-            categoria = (Categoria) view.getCmbCategoria().getSelectedItem();
-        }
-
-        List<Reserva> reservas;
-        if (fecha != null && categoria != null) {
-            reservas = model.getReservasPorFechaYCategoria(fecha, categoria);
-        } else if (fecha != null) {
-            reservas = model.getReservasPorFecha(fecha);
-        } else if (categoria != null) {
-            reservas = model.getReservasPorCategoria(categoria);
-        } else {
-            reservas = model.getTodasLasReservas();
-        }
-
-        model.setReservas(reservas);
+        model.cargarMatriz(fecha, categoriaSeleccionada);
+        view.getTblCalendarizacion().setModel(model.getTableModel());
+        ajustarAnchoColumnas();
     }
 
-    @Override
-    public void update() {
-        poblarComboCategorias();
-        filtrar();
+    public void print() {
+        try {
+            String dest = "calendarizacion.pdf";
+            PdfWriter writer = new PdfWriter(dest);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+            document.add(new Paragraph("Calendarización de recursos"));
+            JTable tabla = view.getTblCalendarizacion();
+            agregarTabla(document, tabla);
+            document.close();
+            Pdf.openPdf(dest);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void agregarTabla(Document document, JTable tabla) {
+        if (tabla == null || tabla.getColumnCount() == 0) return;
+        int cols = tabla.getColumnCount();
+        Table table = new Table(cols);
+        for (int c = 0; c < cols; c++) {
+            table.addHeaderCell(Pdf.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
+        }
+        for (int r = 0; r < tabla.getRowCount(); r++) {
+            for (int c = 0; c < cols; c++) {
+                Object val = tabla.getValueAt(r, c);
+                table.addCell(Pdf.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
+            }
+        }
+        document.add(table);
+    }
+
+    private void ajustarAnchoColumnas() {
+        JTable tabla = view.getTblCalendarizacion();
+        if (tabla == null) return;
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(70);
+        for (int i = 1; i < tabla.getColumnCount(); i++) {
+            tabla.getColumnModel().getColumn(i).setPreferredWidth(160);
+        }
     }
 }

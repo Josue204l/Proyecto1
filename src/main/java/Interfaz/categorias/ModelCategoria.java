@@ -16,13 +16,11 @@ public class ModelCategoria {
 
     private Categoria seleccionado;
     private TableModelCategoria tableModel;
-    private List<Categoria> listaFiltrada;
     private final PropertyChangeSupport propertyChangeSupport;
 
     public ModelCategoria() {
         this.seleccionado = new Categoria();
-        this.listaFiltrada = new ArrayList<>(getCategorias());
-        this.tableModel = new TableModelCategoria(listaFiltrada);
+        this.tableModel = new TableModelCategoria(new ArrayList<>(getCategorias()));
         this.propertyChangeSupport = new PropertyChangeSupport(this);
     }
 
@@ -30,7 +28,9 @@ public class ModelCategoria {
         propertyChangeSupport.addPropertyChangeListener(listener);
     }
 
-    public Categoria getSeleccionado() { return seleccionado; }
+    public Categoria getSeleccionado() {
+        return seleccionado;
+    }
 
     public void setSeleccionado(Categoria seleccionado) {
         Categoria old = this.seleccionado;
@@ -38,68 +38,78 @@ public class ModelCategoria {
         propertyChangeSupport.firePropertyChange(SELECCIONADO, old, seleccionado);
     }
 
-    public TableModelCategoria getTableModel() { return tableModel; }
+    public TableModelCategoria getTableModel() {
+        return tableModel;
+    }
 
     public List<Categoria> getCategorias() {
         return Data.getInstancia().getCategorias();
     }
 
-    public String generarNuevoId() {
-        int max = getCategorias().stream().mapToInt(c -> {
-            try {
-                return Integer.parseInt(c.getId().replace("CAT-", ""));
-            } catch (Exception e) {
-                return 0;
-            }
-        }).max().orElse(0);
-        return String.format("CAT-%06d", max + 1);
-    }
-
-    public void buscar(String descripcion) {
-        listaFiltrada = getCategorias().stream()
-                .filter(c -> descripcion.isEmpty() || (c.getDescripcion() != null && c.getDescripcion().toLowerCase().contains(descripcion.toLowerCase())))
+    public List<Categoria> buscar(String descripcion) {
+        String filtro = descripcion == null ? "" : descripcion.trim().toLowerCase();
+        if (filtro.isEmpty()) return new ArrayList<>(getCategorias());
+        return getCategorias().stream()
+                .filter(c -> c.getEtiqueta() != null && c.getEtiqueta().toLowerCase().contains(filtro))
                 .collect(Collectors.toList());
-        tableModel.setFilas(listaFiltrada);
     }
 
-    public void restablecerFiltro() {
-        listaFiltrada = new ArrayList<>(getCategorias());
-        tableModel.setFilas(listaFiltrada);
+    public void mostrar(List<Categoria> lista) {
+        this.tableModel.setFilas(lista);
+        propertyChangeSupport.firePropertyChange(LISTA, null, lista);
+    }
+
+    public String generarId() {
+        int max = 0;
+        for (Categoria c : getCategorias()) {
+            if (c.getId() != null && c.getId().toUpperCase().startsWith("CAT-")) {
+                try {
+                    max = Math.max(max, Integer.parseInt(c.getId().substring(4)));
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        return String.format("CAT-%03d", max + 1);
     }
 
     public void guardar(Categoria categoria) throws Exception {
+        if (categoria.getDescripcion() == null || categoria.getDescripcion().trim().isEmpty()) {
+            throw new Exception("La descripción de la categoría es obligatoria.");
+        }
+        categoria.setDescripcion(categoria.getDescripcion().trim());
+        categoria.setNombre(categoria.getDescripcion());
+
         List<Categoria> categorias = Data.getInstancia().getCategorias();
         int index = -1;
-        for (int i = 0; i < categorias.size(); i++) {
-            if (categorias.get(i).getId().equals(categoria.getId())) {
-                index = i;
-                break;
+        if (categoria.getId() != null && !categoria.getId().isBlank()) {
+            for (int i = 0; i < categorias.size(); i++) {
+                if (categorias.get(i).getId().equals(categoria.getId())) {
+                    index = i;
+                    break;
+                }
             }
         }
         if (index >= 0) {
             categorias.set(index, categoria);
         } else {
+            categoria.setId(generarId());
             categorias.add(categoria);
         }
 
         Data.getInstancia().guardarCategorias();
-        restablecerFiltro();
+        this.tableModel.setFilas(new ArrayList<>(categorias));
         propertyChangeSupport.firePropertyChange(LISTA, null, categorias);
     }
 
     public boolean eliminar(String id) throws Exception {
-        // Validar si existen recursos asociados a esta categoría
-        boolean tieneRecursos = Data.getInstancia().getRecursos().stream()
-                .anyMatch(r -> r.getCategoria() != null && r.getCategoria().getId().equals(id));
-
-        if (tieneRecursos) {
-            throw new Exception("No se puede eliminar la categoría porque tiene recursos asociados.");
+        boolean enUso = Data.getInstancia().getRecursos().stream()
+                .anyMatch(r -> r.getCategoria() != null && id.equals(r.getCategoria().getId()));
+        if (enUso) {
+            throw new Exception("No se puede borrar una categoría que tiene recursos asociados.");
         }
-
         boolean eliminado = Data.getInstancia().getCategorias().removeIf(c -> c.getId().equals(id));
         if (eliminado) {
             Data.getInstancia().guardarCategorias();
-            restablecerFiltro();
+            this.tableModel.setFilas(new ArrayList<>(getCategorias()));
             propertyChangeSupport.firePropertyChange(LISTA, null, getCategorias());
         }
         return eliminado;

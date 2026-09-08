@@ -1,14 +1,16 @@
 package Interfaz.actividades;
 
-import logic.Observer;
-import logic.Reserva;
-import logic.Service;
-import utils.PDFGenerator;
+import Interfaz.utils.PDFGenerator;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import javax.swing.*;
+import java.time.LocalDate;
 
-public class ControllerActividades implements Observer {
+public class ControllerActividades {
 
     private final actividadesView view;
     private final ModelActividades model;
@@ -16,60 +18,68 @@ public class ControllerActividades implements Observer {
     public ControllerActividades(actividadesView view, ModelActividades model) {
         this.view = view;
         this.model = model;
-
-        registrarEventos();
-        Service.instance().addObserver(this);
-        actualizarTabla();
-    }
-
-    private void registrarEventos() {
-        if (view.getBtnBuscar() != null) {
-            view.getBtnBuscar().addActionListener(e -> buscar());
-        }
-        if (view.getTable() != null) {
-            view.getTable().getSelectionModel().addListSelectionListener(e -> {
-                if (!e.getValueIsAdjusting()) cargarSeleccionada();
-            });
-        }
-    }
-
-    private void buscar() {
-        String texto = view.getTxtBuscar() != null ? view.getTxtBuscar().getText().trim() : "";
-        List<Reserva> filtradas = model.getActividades().stream()
-                .filter(r -> "ACTIVA".equalsIgnoreCase(r.getEstado()))
-                .filter(r -> texto.isEmpty() ||
-                        (r.getTitulo() != null && r.getTitulo().toLowerCase().contains(texto.toLowerCase())) ||
-                        (r.getFuncionario() != null && r.getFuncionario().getNombre().toLowerCase().contains(texto.toLowerCase())))
-                .collect(Collectors.toList());
-        model.getTableModel().setFilas(filtradas);
-        if (view.getTable() != null) view.getTable().setModel(model.getTableModel());
-    }
-
-    private void cargarSeleccionada() {
-        if (view.getTable() == null) return;
-        int row = view.getTable().getSelectedRow();
-        if (row >= 0) {
-            Reserva r = model.getTableModel().getRowAt(row);
-            if (r != null && view.getTxtBuscar() != null) {
-                view.getTxtBuscar().setText(r.getTitulo() != null ? r.getTitulo() : "");
+        if (view != null) {
+            view.setController(this);
+            if (view.getTable() != null) {
+                view.getTable().setRowHeight(28);
+                view.getTable().setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             }
         }
+        cargar();
     }
 
-    public void actualizarTabla() {
+    public ControllerActividades(ModelActividades model) {
+        this(null, model);
+    }
+
+    public void cargar() {
+        if (view == null) return;
+        LocalDate fecha = view.getDatePicker() != null && view.getDatePicker().getDate() != null
+                ? view.getDatePicker().getDate()
+                : LocalDate.now();
+        model.cargarSemana(fecha);
         if (view.getTable() != null) {
-            List<Reserva> activas = model.getActividades().stream()
-                    .filter(r -> "ACTIVA".equalsIgnoreCase(r.getEstado()))
-                    .collect(Collectors.toList());
-            model.getTableModel().setFilas(activas);
             view.getTable().setModel(model.getTableModel());
+            view.getTable().getColumnModel().getColumn(0).setPreferredWidth(70);
+            for (int i = 1; i < view.getTable().getColumnCount(); i++) {
+                view.getTable().getColumnModel().getColumn(i).setPreferredWidth(140);
+            }
+        }
+        if (view.getLblSemana() != null) {
+            view.getLblSemana().setText(model.etiquetaSemana());
         }
     }
 
-    public ModelActividades getModel() { return model; }
+    public void print() {
+        try {
+            String dest = "actividades.pdf";
+            PdfWriter writer = new PdfWriter(dest);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+            document.add(new Paragraph("Actividades semanales"));
+            JTable tabla = view.getTable();
+            if (tabla != null && tabla.getColumnCount() > 0) {
+                Table table = new Table(tabla.getColumnCount());
+                for (int c = 0; c < tabla.getColumnCount(); c++) {
+                    table.addHeaderCell(Pdf.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
+                }
+                for (int r = 0; r < tabla.getRowCount(); r++) {
+                    for (int c = 0; c < tabla.getColumnCount(); c++) {
+                        Object val = tabla.getValueAt(r, c);
+                        table.addCell(Pdf.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
+                    }
+                }
+                document.add(table);
+            }
+            document.close();
+            Pdf.openPdf(dest);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
-    @Override
-    public void update() {
-        actualizarTabla();
+    public ModelActividades getModel() {
+        return model;
     }
 }
