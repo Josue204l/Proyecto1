@@ -5,7 +5,7 @@ import javax.swing.*;
 public class funcionariosView {
 
     // --- Vinculación con el Form de IntelliJ UI Designer ---
-    private JPanel panel1;         // Panel principal declarado en <grid binding="panel1">
+    private JPanel panel1;         // Panel principal
 
     // Sección Búsqueda
     private JTextField textField1; // Buscar por ID
@@ -26,13 +26,36 @@ public class funcionariosView {
     // Sección Listado
     private JTable table1;         // Tabla de registros
 
+    private ControllerFuncionario controller;
+
+    public void setController(ControllerFuncionario controller) {
+        this.controller = controller;
+        configurarListeners();
+    }
+
+    private void configurarListeners() {
+        if (guardarButton != null) guardarButton.addActionListener(e -> controller.guardar());
+        if (borrarButton != null) borrarButton.addActionListener(e -> controller.eliminar());
+        if (limpiarButton != null) limpiarButton.addActionListener(e -> controller.limpiar());
+        if (button1 != null) button1.addActionListener(e -> controller.buscar());
+        if (button2 != null) button2.addActionListener(e -> controller.print());
+
+        if (table1 != null) {
+            table1.getSelectionModel().addListSelectionListener(e -> {
+                if (!e.getValueIsAdjusting() && table1.getSelectedRow() >= 0) {
+                    controller.cargarSeleccionado();
+                }
+            });
+        }
+    }
+
     // --- Contenedor Principal ---
     public JPanel getMainPanel() {
         return panel1 != null ? panel1 : new JPanel();
     }
 
-    // --- Métodos Requeridos por ControllerFuncionario ---
-
+    // --- Getters Adaptados para ControllerFuncionario ---
+    public JTable getTable() { return table1; }
     public JTable getTablaFuncionarios() { return table1; }
 
     public JButton getBuscarButton() { return button1; }
@@ -45,7 +68,7 @@ public class funcionariosView {
     public JTextField getTxtBuscarId() { return textField1; }
     public JTextField getTxtBuscarNombre() { return textField2; }
 
-    // Campos de Formulario (Edición / Guardado)
+    // Campos de Formulario
     public JTextField getTxtId() { return textField3; }
     public JTextField getTxtNombre() { return textField4; }
     public JTextField getTxtTelefono() { return textField5; }

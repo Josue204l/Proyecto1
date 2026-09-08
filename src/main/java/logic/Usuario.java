@@ -1,9 +1,22 @@
 package logic;
 
-public abstract class Usuario {
-    private String id;
-    private String clave;
-    private String rol;
+import data.XmlIdAdapter;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlID;
+import jakarta.xml.bind.annotation.XmlSeeAlso;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlSeeAlso({Funcionario.class}) // Permite a JAXB reconocer la herencia
+public class Usuario {
+
+    @XmlID
+    @XmlJavaTypeAdapter(XmlIdAdapter.class)
+    protected String id;
+
+    protected String clave;
+    protected String rol;
 
     public Usuario() {}
 
@@ -21,14 +34,4 @@ public abstract class Usuario {
 
     public String getRol() { return rol; }
     public void setRol(String rol) { this.rol = rol; }
-
-    // Getter por defecto para evitar errores de compilación al pedir el nombre
-    public String getNombre() {
-        return id != null ? id : "";
-    }
-
-    @Override
-    public String toString() {
-        return getNombre();
-    }
 }

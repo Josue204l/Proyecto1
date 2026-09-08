@@ -21,8 +21,8 @@ public class ControllerLogin {
     }
 
     public void login() {
-        String id = view.getTxtUsuario().getText().trim();
-        String clave = new String(view.getTxtClave().getPassword()).trim();
+        String id = view.getTxtUsuario() != null ? view.getTxtUsuario().getText().trim() : "";
+        String clave = view.getTxtClave() != null ? new String(view.getTxtClave().getPassword()).trim() : "";
 
         if (id.isEmpty() || clave.isEmpty()) {
             JOptionPane.showMessageDialog(view, "Debe ingresar usuario y contraseña.", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -47,19 +47,20 @@ public class ControllerLogin {
     }
 
     public void cambiarClave() {
-        String id = view.getTxtUsuario().getText().trim();
+        String id = view.getTxtUsuario() != null ? view.getTxtUsuario().getText().trim() : "";
         if (id.isEmpty()) {
             JOptionPane.showMessageDialog(view, "Ingrese el ID del usuario cuya clave desea cambiar.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
+
         Usuario usuario = Service.instance().buscarPorId(id);
         if (usuario == null) {
             JOptionPane.showMessageDialog(view, "No existe un usuario con ese ID.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
         Window owner = SwingUtilities.getWindowAncestor(view);
-        if (owner == null) owner = view;
-        cambiarclaveView dialogo = new cambiarclaveView(owner);
+        cambiarclaveView dialogo = (owner instanceof Frame) ? new cambiarclaveView((Frame) owner) : new cambiarclaveView(null);
         new ControllerCambiarClave(dialogo, usuario);
         dialogo.setVisible(true);
     }
@@ -70,7 +71,7 @@ public class ControllerLogin {
     }
 
     public void clear() {
-        view.getTxtUsuario().setText("");
-        view.getTxtClave().setText("");
+        if (view.getTxtUsuario() != null) view.getTxtUsuario().setText("");
+        if (view.getTxtClave() != null) view.getTxtClave().setText("");
     }
 }

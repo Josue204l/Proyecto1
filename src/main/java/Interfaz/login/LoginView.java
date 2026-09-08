@@ -1,6 +1,5 @@
 package Interfaz.login;
 
-import Interfaz.cambiarclave.cambiarclaveView;
 import javax.swing.*;
 import java.awt.*;
 
@@ -25,9 +24,8 @@ public class LoginView extends JDialog {
     private ControllerLogin controller;
 
     public LoginView(Frame parent) {
-        super(parent, "Inicio de Sesión", true); // true = modal
+        super(parent, "Inicio de Sesión", true);
 
-        // Resguardo de seguridad: previene la excepción si el .form no se vincula correctamente
         if (contentPane == null) {
             contentPane = new JPanel();
         }
@@ -35,7 +33,16 @@ public class LoginView extends JDialog {
         setContentPane(contentPane);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        // Evento para el botón cancelar/cerrar
+        configurarEventosBasicos();
+        pack();
+        if (parent != null) {
+            setLocationRelativeTo(parent);
+        } else {
+            setLocationRelativeTo(null);
+        }
+    }
+
+    private void configurarEventosBasicos() {
         if (btnCancelar != null) {
             btnCancelar.addActionListener(e -> {
                 if (controller != null) {
@@ -45,27 +52,21 @@ public class LoginView extends JDialog {
                 }
             });
         }
-
-        // Listener para abrir la vista de Cambiar Contraseña
-        if (cambiarButton != null) {
-            cambiarButton.addActionListener(e -> {
-                cambiarclaveView vista = new cambiarclaveView((Frame) LoginView.this.getParent());
-                vista.setVisible(true);
-            });
-        }
-
-        pack();
-        setLocationRelativeTo(parent);
     }
 
     public void setController(ControllerLogin controller) {
         this.controller = controller;
+
         if (ingresarButton != null) {
             ingresarButton.addActionListener(e -> controller.login());
         }
+
+        if (cambiarButton != null) {
+            cambiarButton.addActionListener(e -> controller.cambiarClave());
+        }
     }
 
-    // Getters
+    // --- Getters de Componentes ---
     public JTextField getTxtUsuario() { return txtUsuario; }
     public JPasswordField getTxtClave() { return txtClave; }
     public JButton getIngresarButton() { return ingresarButton; }

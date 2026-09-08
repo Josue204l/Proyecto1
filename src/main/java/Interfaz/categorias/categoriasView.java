@@ -1,6 +1,6 @@
 package Interfaz.categorias;
 
-import Interfaz.util.UiHelper;
+import utils.UiHelper;
 
 import javax.swing.*;
 import java.awt.*;

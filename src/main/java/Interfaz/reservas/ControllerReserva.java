@@ -243,18 +243,18 @@ public class ControllerReserva {
             if (tabla != null && tabla.getColumnCount() > 0) {
                 Table table = new Table(tabla.getColumnCount());
                 for (int c = 0; c < tabla.getColumnCount(); c++) {
-                    table.addHeaderCell(Pdf.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
+                    table.addHeaderCell(PDFGenerator.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
                 }
                 for (int r = 0; r < tabla.getRowCount(); r++) {
                     for (int c = 0; c < tabla.getColumnCount(); c++) {
                         Object val = tabla.getValueAt(r, c);
-                        table.addCell(Pdf.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
+                        table.addCell(PDFGenerator.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
                     }
                 }
                 document.add(table);
             }
             document.close();
-            Pdf.openPdf(dest);
+            PDFGenerator.openPdf(dest);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);

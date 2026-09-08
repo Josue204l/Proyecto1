@@ -1,8 +1,21 @@
 package logic;
 
+import data.XmlIdAdapter;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlID;
+import jakarta.xml.bind.annotation.XmlIDREF;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Recurso {
+    @XmlID
+    @XmlJavaTypeAdapter(XmlIdAdapter.class)
     private String id;
     private String descripcion;
+    @XmlIDREF
     private Categoria categoria;
 
     public Recurso() {

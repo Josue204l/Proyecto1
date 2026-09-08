@@ -6,41 +6,64 @@ import java.util.List;
 
 public class TableModelEstadisticas extends AbstractTableModel {
 
-    private final String[] cols;
-    private List<EstadisticaFila> filas;
+    private List<String[]> filas;
+    private String[] columnas;
 
-    public TableModelEstadisticas(String colEtiqueta, String colCantidad) {
-        this.cols = new String[]{colEtiqueta, colCantidad};
+    // Constructor sin parámetros
+    public TableModelEstadisticas() {
         this.filas = new ArrayList<>();
+        this.columnas = new String[]{"Etiqueta", "Cantidad"};
     }
 
-    public void setFilas(List<EstadisticaFila> filas) {
+    // Constructor que acepta la lista de filas
+    public TableModelEstadisticas(List<String[]> filas) {
         this.filas = filas != null ? filas : new ArrayList<>();
-        fireTableDataChanged();
+        this.columnas = new String[]{"Etiqueta", "Cantidad"};
     }
 
-    public List<EstadisticaFila> getFilas() {
-        return filas;
+    // Constructor completo con columnas personalizadas
+    public TableModelEstadisticas(List<String[]> filas, String[] columnas) {
+        this.filas = filas != null ? filas : new ArrayList<>();
+        this.columnas = columnas != null ? columnas : new String[]{"Etiqueta", "Cantidad"};
+    }
+
+    /**
+     * Permite actualizar dinámicamente las filas y los nombres de las columnas
+     */
+    public void setFilasGenericas(List<String[]> nuevasFilas, String[] nuevasColumnas) {
+        this.filas = nuevasFilas != null ? nuevasFilas : new ArrayList<>();
+        if (nuevasColumnas != null) {
+            this.columnas = nuevasColumnas;
+        }
+        fireTableStructureChanged(); // Notifica que cambiaron columnas y datos
     }
 
     @Override
     public int getRowCount() {
-        return filas != null ? filas.size() : 0;
+        return filas.size();
     }
 
     @Override
     public int getColumnCount() {
-        return cols.length;
+        return columnas.length;
     }
 
     @Override
-    public String getColumnName(int col) {
-        return cols[col];
+    public String getColumnName(int column) {
+        if (column >= 0 && column < columnas.length) {
+            return columnas[column];
+        }
+        return super.getColumnName(column);
     }
 
     @Override
-    public Object getValueAt(int row, int col) {
-        EstadisticaFila f = filas.get(row);
-        return col == 0 ? f.getEtiqueta() : f.getCantidad();
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        if (rowIndex >= 0 && rowIndex < filas.size()) {
+            String[] fila = filas.get(rowIndex);
+            if (columnIndex >= 0 && columnIndex < fila.length) {
+                return fila[columnIndex];
+            }
+        }
+        return "";
     }
 }

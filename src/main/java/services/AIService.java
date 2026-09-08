@@ -1,82 +1,67 @@
 package services;
 
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.service.AiServices;
 import logic.Categoria;
 import logic.Service;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AIService {
 
-    public static class DatosExtraidos {
-        public String actividad = "";
-        public LocalDate fecha = null;
-        public LocalTime horaInicio = null;
-        public LocalTime horaFin = null;
-        public List<Categoria> categoriasEncontradas = new ArrayList<>();
+    private final ReservaExtractorService extractorService;
+
+    public AIService() {
+        // Opción 1: Conexión con OpenAI GPT (Configura tu API Key o variable de entorno)
+        String apiKey = System.getenv("OPENAI_API_KEY");
+        if (apiKey == null || apiKey.isBlank()) {
+            apiKey = "demo"; // Clave demo/fallback para pruebas sin crash
+        }
+
+        OpenAiChatModel model = OpenAiChatModel.builder()
+                .apiKey(apiKey)
+                .modelName("gpt-4o-mini")
+                .temperature(0.0) // 0.0 para respuestas estructuradas y precisas
+                .build();
+
+        // Construcción dinámica de la interfaz con LangChain4j
+        this.extractorService = AiServices.create(ReservaExtractorService.class, model);
     }
 
-    public static DatosExtraidos extraerInformacion(String frase) {
-        DatosExtraidos datos = new DatosExtraidos();
-        if (frase == null || frase.trim().isEmpty()) {
-            return datos;
+    /**
+     * Método invocado por ControllerReserva.
+     * Envía las categorías registradas en la app y la fecha de hoy a LangChain4j.
+     */
+    public ReservaExtraccion extraerReserva(String frase) {
+        if (frase == null || frase.isBlank()) {
+            return new ReservaExtraccion();
         }
 
-        String texto = frase.trim();
+        // 1. Obtener la lista de categorías registradas en el sistema
+        String categoriasStr = "";
+        try {
+            List<Categoria> categoriasList = Service.getInstancia() != null
+                    ? Service.getInstancia().getCategorias()
+                    : Service.instance().getCategorias();
 
-        // 1. Extraer Fecha (Formatos: YYYY-MM-DD o DD/MM/YYYY)
-        Pattern patronFecha = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})|(\\d{2}/\\d{2}/\\d{4})");
-        Matcher matcherFecha = patronFecha.matcher(texto);
-        if (matcherFecha.find()) {
-            String fStr = matcherFecha.group();
-            try {
-                if (fStr.contains("-")) {
-                    datos.fecha = LocalDate.parse(fStr, DateTimeFormatter.ISO_LOCAL_DATE);
-                } else {
-                    datos.fecha = LocalDate.parse(fStr, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-                }
-            } catch (Exception ignored) {}
-        }
-
-        // 2. Extraer Horas (Formatos: HH:mm)
-        Pattern patronHora = Pattern.compile("(\\d{2}:\\d{2})");
-        Matcher matcherHora = patronHora.matcher(texto);
-        List<LocalTime> horas = new ArrayList<>();
-        while (matcherHora.find()) {
-            try {
-                horas.add(LocalTime.parse(matcherHora.group()));
-            } catch (Exception ignored) {}
-        }
-
-        if (horas.size() >= 1) datos.horaInicio = horas.get(0);
-        if (horas.size() >= 2) datos.horaFin = horas.get(1);
-
-        // 3. Coincidencia de Categorías
-        List<Categoria> todasCategorias = Service.instance().getCategorias();
-        if (todasCategorias != null) {
-            for (Categoria cat : todasCategorias) {
-                String nombre = cat.getNombre() != null ? cat.getNombre().toLowerCase() : "";
-                String desc = cat.getDescripcion() != null ? cat.getDescripcion().toLowerCase() : "";
-                if ((!nombre.isEmpty() && texto.toLowerCase().contains(nombre)) ||
-                        (!desc.isEmpty() && texto.toLowerCase().contains(desc))) {
-                    datos.categoriasEncontradas.add(cat);
-                }
+            if (categoriasList != null) {
+                categoriasStr = categoriasList.stream()
+                        .map(Categoria::getEtiqueta)
+                        .collect(Collectors.joining(", "));
             }
+        } catch (Exception ignored) {
+            categoriasStr = "Laboratorio, Proyector, Auditorio, Computadoras, Sala de Reuniones";
         }
 
-        // 4. Inferencia del Título/Actividad (Elimina fechas/horas para dejar el texto limpio)
-        String actividadLimpia = texto.replaceAll("(\\d{4}-\\d{2}-\\d{2})|(\\d{2}/\\d{2}/\\d{4})", "")
-                .replaceAll("(\\d{2}:\\d{2})", "")
-                .replaceAll("(?i)(el|de|a|las|en|para|con)", "")
-                .replaceAll("\\s+", " ")
-                .trim();
-        datos.actividad = actividadLimpia.isEmpty() ? texto : actividadLimpia;
+        // 2. Obtener la fecha actual para el parámetro {{hoy}}
+        String hoyStr = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-        return datos;
+        // 3. Llamar al servicio de LangChain4j
+        ReservaExtraccion resultado = extractorService.extraer(frase, categoriasStr, hoyStr);
+
+        return resultado != null ? resultado : new ReservaExtraccion();
     }
 }

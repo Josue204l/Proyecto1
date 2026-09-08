@@ -1,6 +1,17 @@
 package logic;
 
+import data.XmlIdAdapter;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlID;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Categoria {
+    @XmlID
+    @XmlJavaTypeAdapter(XmlIdAdapter.class)
     private String id;
     private String nombre;
     private String descripcion;
@@ -22,8 +33,14 @@ public class Categoria {
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
 
+    public String getEtiqueta() {
+        if (descripcion != null && !descripcion.isBlank()) return descripcion;
+        if (nombre != null && !nombre.isBlank()) return nombre;
+        return id != null ? id : "";
+    }
+
     @Override
     public String toString() {
-        return (nombre != null && !nombre.isBlank()) ? nombre : (descripcion != null ? descripcion : id);
+        return getEtiqueta();
     }
 }

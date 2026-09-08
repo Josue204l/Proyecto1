@@ -16,6 +16,7 @@ public class ModelCalendarizacion {
 
     public static final String MATRIZ = "matriz";
     public static final String CATEGORIAS = "categorias";
+    public static final String RESERVAS = "reservas";
 
     private final PropertyChangeSupport propertyChangeSupport;
     private final TableModelCalendarizacion tableModel;
