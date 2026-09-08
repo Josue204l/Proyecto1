@@ -10,13 +10,32 @@
      <string>1234</string>
     </void>
     <void property="nombre">
-     <string>Administrador</string>
+     <string>josue</string>
     </void>
     <void property="rol">
-     <string>ADMIN</string>
+     <string>FUNCIONARIO</string>
     </void>
     <void property="telefono">
-     <string></string>
+     <string>71775405</string>
+    </void>
+   </object>
+  </void>
+  <void method="add">
+   <object class="logic.Funcionario">
+    <void property="clave">
+     <string>1235</string>
+    </void>
+    <void property="id">
+     <string>6666</string>
+    </void>
+    <void property="nombre">
+     <string>dany</string>
+    </void>
+    <void property="rol">
+     <string>FUNCIONARIO</string>
+    </void>
+    <void property="telefono">
+     <string>37937837</string>
     </void>
    </object>
   </void>

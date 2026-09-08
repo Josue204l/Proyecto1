@@ -26,22 +26,36 @@ public class LoginView extends JDialog {
 
     public LoginView(Frame parent) {
         super(parent, "Inicio de Sesión", true); // true = modal
+
+        // Resguardo de seguridad: previene la excepción si el .form no se vincula correctamente
+        if (contentPane == null) {
+            contentPane = new JPanel();
+        }
+
         setContentPane(contentPane);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        // Listener opcional para cancelar/cerrar
+        // Evento para el botón cancelar/cerrar
         if (btnCancelar != null) {
-            btnCancelar.addActionListener(e -> dispose());
+            btnCancelar.addActionListener(e -> {
+                if (controller != null) {
+                    controller.cancel();
+                } else {
+                    dispose();
+                }
+            });
+        }
+
+        // Listener para abrir la vista de Cambiar Contraseña
+        if (cambiarButton != null) {
+            cambiarButton.addActionListener(e -> {
+                cambiarclaveView vista = new cambiarclaveView((Frame) LoginView.this.getParent());
+                vista.setVisible(true);
+            });
         }
 
         pack();
         setLocationRelativeTo(parent);
-
-        // Listener para abrir la vista de Cambiar Contraseña
-        cambiarButton.addActionListener(e -> {
-            cambiarclaveView vista = new cambiarclaveView((Frame) LoginView.this.getParent());
-            vista.setVisible(true);
-        });
     }
 
     public void setController(ControllerLogin controller) {
@@ -57,5 +71,7 @@ public class LoginView extends JDialog {
     public JButton getIngresarButton() { return ingresarButton; }
     public JButton getBtnCancelar() { return btnCancelar; }
     public JButton getCambiarButton() { return cambiarButton; }
+
+    @Override
     public JPanel getContentPane() { return contentPane; }
 }
