@@ -1,16 +1,8 @@
 
 
 package utils;
-// codigo anterior
-import com.itextpdf.text.*;
-        import com.itextpdf.text.pdf.*;
 
-        import javax.swing.*;
-        import java.awt.Desktop;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+
 //
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;

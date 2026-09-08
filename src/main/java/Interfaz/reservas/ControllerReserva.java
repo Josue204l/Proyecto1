@@ -1,6 +1,6 @@
 package Interfaz.reservas;
 
-import Interfaz.util.Pdf;
+import utils.PDFGenerator;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
