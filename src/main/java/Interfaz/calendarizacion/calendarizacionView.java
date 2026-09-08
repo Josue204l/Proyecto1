@@ -2,17 +2,15 @@ package Interfaz.calendarizacion;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import logic.Categoria;
-import logic.Recurso;
-import logic.Reserva;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class calendarizacionView implements PropertyChangeListener {
 
@@ -27,10 +25,6 @@ public class calendarizacionView implements PropertyChangeListener {
     private DatePicker datePicker;
     private ControllerCalendarizacion controller;
     private ModelCalendarizacion model;
-
-    private static final String[] COLUMNAS = {"ID", "Título", "Fecha", "Hora Inicio", "Hora Fin", "Recursos", "Categorías", "Estado"};
-    private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");
 
     public calendarizacionView() {
         this.datePicker = new DatePicker();
@@ -48,6 +42,29 @@ public class calendarizacionView implements PropertyChangeListener {
                 if (controller != null) controller.print();
             });
         }
+        if (button1 != null) {
+            button1.addActionListener(e -> seleccionarFechaDialogo());
+        }
+    }
+
+    private void seleccionarFechaDialogo() {
+        SpinnerDateModel modelDate = new SpinnerDateModel();
+        JSpinner spinner = new JSpinner(modelDate);
+        JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, "dd/MM/yyyy");
+        spinner.setEditor(editor);
+
+        int option = JOptionPane.showConfirmDialog(panel, spinner, "Seleccionar Fecha", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (option == JOptionPane.OK_OPTION) {
+            Date selectedDate = (Date) spinner.getValue();
+            LocalDate localDate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            String formatted = localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            if (textField1 != null) {
+                textField1.setText(formatted);
+            }
+            if (datePicker != null) {
+                datePicker.setDate(localDate);
+            }
+        }
     }
 
     public void setController(ControllerCalendarizacion controller) {
@@ -61,9 +78,6 @@ public class calendarizacionView implements PropertyChangeListener {
         }
     }
 
-    /**
-     * Carga de categorías requerida por el ControllerCalendarizacion
-     */
     public void cargarCategorias(List<Categoria> categorias) {
         DefaultComboBoxModel<Categoria> comboModel = new DefaultComboBoxModel<>();
         if (categorias != null) {
@@ -76,20 +90,18 @@ public class calendarizacionView implements PropertyChangeListener {
         }
     }
 
-    /**
-     * Adaptador para exponer DatePicker a ControllerCalendarizacion
-     */
     public DatePicker getDatePicker() {
         if (datePicker == null) {
             datePicker = new DatePicker();
         }
         if (textField1 != null && !textField1.getText().isBlank()) {
+            String texto = textField1.getText().trim();
             try {
-                LocalDate parsed = LocalDate.parse(textField1.getText().trim(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                LocalDate parsed = LocalDate.parse(texto, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                 datePicker.setDate(parsed);
-            } catch (Exception ignored) {
+            } catch (Exception ignored1) {
                 try {
-                    LocalDate parsedIso = LocalDate.parse(textField1.getText().trim());
+                    LocalDate parsedIso = LocalDate.parse(texto);
                     datePicker.setDate(parsedIso);
                 } catch (Exception ignored2) {}
             }

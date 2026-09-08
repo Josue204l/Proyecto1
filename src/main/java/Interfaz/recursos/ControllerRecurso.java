@@ -99,8 +99,7 @@ public class ControllerRecurso {
             JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione un recurso.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(),
-                "¿Borrar el recurso " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(), "¿Borrar el recurso " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
         try {
             model.eliminar(id);
@@ -190,8 +189,7 @@ public class ControllerRecurso {
             document.close();
             PDFGenerator.openPdf(dest);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

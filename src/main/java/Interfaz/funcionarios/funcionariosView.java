@@ -28,6 +28,11 @@ public class funcionariosView {
 
     private ControllerFuncionario controller;
 
+    public funcionariosView() {
+        if (button1 != null) button1.setText("Buscar");
+        if (button2 != null) button2.setText("Imprimir");
+    }
+
     public void setController(ControllerFuncionario controller) {
         this.controller = controller;
         configurarListeners();

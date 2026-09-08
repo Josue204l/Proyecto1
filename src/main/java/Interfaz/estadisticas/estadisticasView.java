@@ -3,6 +3,7 @@ package Interfaz.estadisticas;
 import com.github.lgooddatepicker.components.DatePicker;
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
 
 public class estadisticasView {
 
@@ -11,7 +12,7 @@ public class estadisticasView {
 
     // --- Sección Recursos ---
     private JButton btnCargarRecursos;
-    private JButton btnPdfRecursos; // Botón para generar PDF
+    private JButton btnPdfRecursos;
     private JTable tableRecursos;
     private JPanel chartRecursos;
     private JPanel panelRecursosDesde;
@@ -19,7 +20,7 @@ public class estadisticasView {
 
     // --- Sección Actividades ---
     private JButton btnCargarActividades;
-    private JButton btnPdfActividades; // Botón para generar PDF
+    private JButton btnPdfActividades;
     private JTable tableActividades;
     private JPanel chartActividades;
     private JPanel panelActividadesDesde;
@@ -38,6 +39,12 @@ public class estadisticasView {
     }
 
     private void initCustomComponents() {
+        LocalDate hoy = LocalDate.now();
+        dpRecursosDesde.setDate(hoy.minusMonths(1));
+        dpRecursosHasta.setDate(hoy);
+        dpActividadesDesde.setDate(hoy.minusMonths(1));
+        dpActividadesHasta.setDate(hoy);
+
         if (panelRecursosDesde != null) {
             panelRecursosDesde.removeAll();
             panelRecursosDesde.add(dpRecursosDesde, BorderLayout.CENTER);
@@ -67,7 +74,6 @@ public class estadisticasView {
             btnCargarActividades.addActionListener(e -> controller.cargarActividades());
         }
 
-        // Conexión de los botones de PDF al método print() del controlador
         if (btnPdfRecursos != null) {
             btnPdfRecursos.addActionListener(e -> controller.print());
         }
@@ -75,6 +81,14 @@ public class estadisticasView {
         if (btnPdfActividades != null) {
             btnPdfActividades.addActionListener(e -> controller.print());
         }
+
+        // Carga inicial automatica de datos
+        SwingUtilities.invokeLater(() -> {
+            if (this.controller != null) {
+                this.controller.cargarRecursos();
+                this.controller.cargarActividades();
+            }
+        });
     }
 
     // --- GETTERS ---

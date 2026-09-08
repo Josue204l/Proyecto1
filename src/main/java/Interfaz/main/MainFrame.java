@@ -35,13 +35,14 @@ import javax.swing.*;
 public class MainFrame extends JFrame {
 
     public MainFrame(Usuario usuario) {
-        super("SISTEMA DE RESERVAS - " + usuario.getId() + " (" + usuario.getRol() + ")");
+        super("SISTEMA DE RESERVAS - " + usuario.getId() + " (" + (usuario.getRol() != null ? usuario.getRol().toUpperCase() : "") + ")");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol());
         Funcionario funcionarioActual = (usuario instanceof Funcionario) ? (Funcionario) usuario : null;
 
+        // Pestañas exclusivas para Administrador
         if (esAdmin) {
             funcionariosView vFunc = new funcionariosView();
             ModelFuncionario mFunc = new ModelFuncionario();
@@ -59,12 +60,14 @@ public class MainFrame extends JFrame {
             tabbedPane.addTab("Recursos", vRec.getMainPanel());
         }
 
+        // Pestaña exclusiva para Funcionario
         if (!esAdmin && funcionarioActual != null) {
             reservasView vRes = new reservasView();
             new ControllerReserva(vRes, funcionarioActual);
             tabbedPane.addTab("Mis Reservas", vRes.getMainPanel());
         }
 
+        // Pestañas compartidas (Administrador y Funcionario)
         calendarizacionView vCal = new calendarizacionView();
         ModelCalendarizacion mCal = new ModelCalendarizacion();
         new ControllerCalendarizacion(vCal, mCal);
@@ -118,8 +121,5 @@ public class MainFrame extends JFrame {
         LoginView loginView = new LoginView(null);
         new ControllerLogin(new ModelLogin(), loginView);
         loginView.setVisible(true);
-        if (Sesion.isLoggedIn()) {
-            new MainFrame(Sesion.getUsuario());
-        }
     }
 }
