@@ -1,17 +1,15 @@
 package Interfaz.recursos;
 
+import utils.PDFGenerator;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import logic.Categoria;
 import logic.Recurso;
 
 import javax.swing.*;
-import java.awt.Desktop;
-import java.io.File;
 import java.util.List;
 
 public class ControllerRecurso {
@@ -36,12 +34,10 @@ public class ControllerRecurso {
         DefaultComboBoxModel<Categoria> filtro = new DefaultComboBoxModel<>();
         filtro.addElement(null);
         DefaultComboBoxModel<Categoria> form = new DefaultComboBoxModel<>();
-
         for (Categoria c : model.getCategorias()) {
             filtro.addElement(c);
             form.addElement(c);
         }
-
         if (view.getCmbFiltroCategoria() != null) {
             view.getCmbFiltroCategoria().setModel(filtro);
             view.getCmbFiltroCategoria().setRenderer(new DefaultListCellRenderer() {
@@ -53,14 +49,12 @@ public class ControllerRecurso {
                 }
             });
         }
-
         if (view.getCmbCategoria() != null) {
             view.getCmbCategoria().setModel(form);
         }
     }
 
     public void buscar() {
-        if (view == null) return;
         Categoria cat = null;
         if (view.getCmbFiltroCategoria() != null && view.getCmbFiltroCategoria().getSelectedItem() instanceof Categoria c) {
             cat = c;
@@ -70,7 +64,6 @@ public class ControllerRecurso {
     }
 
     public void guardar() {
-        if (view == null) return;
         try {
             String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
             String desc = view.getTxtDescripcion() != null ? view.getTxtDescripcion().getText().trim() : "";
@@ -78,7 +71,6 @@ public class ControllerRecurso {
             if (view.getCmbCategoria() != null && view.getCmbCategoria().getSelectedItem() instanceof Categoria c) {
                 cat = c;
             }
-
             Recurso recurso = new Recurso(id, desc, cat);
             if (recurso.getId() == null || recurso.getId().isBlank()) {
                 throw new Exception("El ID o número de activo es obligatorio.");
@@ -89,43 +81,39 @@ public class ControllerRecurso {
             if (recurso.getCategoria() == null) {
                 throw new Exception("Debe seleccionar una categoría.");
             }
-
             model.guardar(recurso);
             actualizarTabla(model.getRecursos());
             limpiar();
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Recurso guardado con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Recurso guardado.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public void eliminar() {
-        if (view == null) return;
         String id = view.getTxtId() != null ? view.getTxtId().getText().trim() : "";
         if (id.isEmpty() && view.getTable() != null && view.getTable().getSelectedRow() >= 0) {
             id = String.valueOf(view.getTable().getValueAt(view.getTable().getSelectedRow(), 0));
         }
         if (id.isEmpty()) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione un recurso de la lista.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Seleccione un recurso.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         int confirm = JOptionPane.showConfirmDialog(view.getMainPanel(),
-                "¿Desea borrar el recurso " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
+                "¿Borrar el recurso " + id + "?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
         try {
             model.eliminar(id);
             actualizarTabla(model.getRecursos());
             limpiar();
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Recurso eliminado.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public void cargarSeleccionado() {
-        if (view == null || view.getTable() == null) return;
+        if (view.getTable() == null) return;
         int fila = view.getTable().getSelectedRow();
-        if (fila < 0) return;
         Recurso r = model.getTableModel().getRowAt(fila);
         if (r == null) return;
         view.getTxtId().setText(r.getId());
@@ -144,7 +132,6 @@ public class ControllerRecurso {
     }
 
     public void limpiar() {
-        if (view == null) return;
         if (view.getTxtId() != null) {
             view.getTxtId().setText("");
             view.getTxtId().setEditable(true);
@@ -180,41 +167,31 @@ public class ControllerRecurso {
     }
 
     public void print() {
-        if (view == null) return;
         try {
             String dest = "recursos.pdf";
             PdfWriter writer = new PdfWriter(dest);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
-            document.add(new Paragraph("Reporte - Listado de Recursos"));
-
+            document.add(new Paragraph("Listado de Recursos"));
             JTable tabla = view.getTable();
             if (tabla != null && tabla.getColumnCount() > 0) {
                 Table table = new Table(tabla.getColumnCount());
                 for (int c = 0; c < tabla.getColumnCount(); c++) {
-                    table.addHeaderCell(new Cell().add(new Paragraph(String.valueOf(tabla.getColumnName(c)))));
+                    table.addHeaderCell(PDFGenerator.getCell(new Paragraph(String.valueOf(tabla.getColumnName(c))), 1, true));
                 }
                 for (int r = 0; r < tabla.getRowCount(); r++) {
                     for (int c = 0; c < tabla.getColumnCount(); c++) {
                         Object val = tabla.getValueAt(r, c);
-                        table.addCell(new Cell().add(new Paragraph(val == null ? "" : val.toString())));
+                        table.addCell(PDFGenerator.getCell(new Paragraph(val == null ? "" : val.toString()), 0, true));
                     }
                 }
                 document.add(table);
             }
             document.close();
-
-            File pdfFile = new File(dest);
-            if (pdfFile.exists() && Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(pdfFile);
-            }
+            PDFGenerator.openPdf(dest);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view.getMainPanel(), "No se pudo generar el PDF: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    public ModelRecurso getModel() {
-        return model;
     }
 }

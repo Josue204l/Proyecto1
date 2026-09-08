@@ -63,9 +63,7 @@ public class ModelEstadisticas {
         conteo.forEach((etiqueta, cantidad) -> resultado.add(new EstadisticaFila(etiqueta, cantidad)));
 
         // Actualizar la JTable de Recursos
-        List<String[]> filasTabla = conteo.entrySet().stream()
-                .map(e -> new String[]{e.getKey(), String.valueOf(e.getValue())})
-                .collect(Collectors.toList());
+        List<String[]> filasTabla = conteo.entrySet().stream().map(e -> new String[]{e.getKey(), String.valueOf(e.getValue())}).collect(Collectors.toList());
         tableModelRecursos.setFilasGenericas(filasTabla, new String[]{"Categoría", "Cantidad de Reservas"});
 
         propertyChangeSupport.firePropertyChange(LISTA, null, resultado);
@@ -96,9 +94,7 @@ public class ModelEstadisticas {
         conteo.forEach((etiqueta, cantidad) -> resultado.add(new EstadisticaFila(etiqueta, cantidad)));
 
         // Actualizar la JTable de Actividades
-        List<String[]> filasTabla = conteo.entrySet().stream()
-                .map(e -> new String[]{e.getKey(), String.valueOf(e.getValue())})
-                .collect(Collectors.toList());
+        List<String[]> filasTabla = conteo.entrySet().stream().map(e -> new String[]{e.getKey(), String.valueOf(e.getValue())}).collect(Collectors.toList());
         tableModelActividades.setFilasGenericas(filasTabla, new String[]{"Semana", "Cantidad de Actividades"});
 
         propertyChangeSupport.firePropertyChange(LISTA, null, resultado);

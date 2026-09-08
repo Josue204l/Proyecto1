@@ -2,24 +2,30 @@ package Interfaz.estadisticas;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import javax.swing.*;
+import java.awt.*;
 
 public class estadisticasView {
 
-    // --- Panel Principal (Coincide estrictamente con binding="mainPanel" del .form) ---
+    // --- Panel Principal ---
     private JPanel mainPanel;
 
-    // --- Sección Recursos (Coincide con bindings del .form) ---
+    // --- Sección Recursos ---
     private JButton btnCargarRecursos;
+    private JButton btnPdfRecursos; // Botón para generar PDF
     private JTable tableRecursos;
     private JPanel chartRecursos;
+    private JPanel panelRecursosDesde;
+    private JPanel panelRecursosHasta;
 
-    // --- Sección Actividades (Coincide con bindings del .form) ---
+    // --- Sección Actividades ---
     private JButton btnCargarActividades;
+    private JButton btnPdfActividades; // Botón para generar PDF
     private JTable tableActividades;
     private JPanel chartActividades;
+    private JPanel panelActividadesDesde;
+    private JPanel panelActividadesHasta;
 
     // --- Selectores de Fechas ---
-    // (Instanciados programáticamente o mediante un panel personalizado para evitar romper el .form)
     private DatePicker dpRecursosDesde = new DatePicker();
     private DatePicker dpRecursosHasta = new DatePicker();
     private DatePicker dpActividadesDesde = new DatePicker();
@@ -28,7 +34,26 @@ public class estadisticasView {
     private ControllerEstadisticas controller;
 
     public estadisticasView() {
-        // IntelliJ inyecta automáticamente los componentes definidos en el .form
+        initCustomComponents();
+    }
+
+    private void initCustomComponents() {
+        if (panelRecursosDesde != null) {
+            panelRecursosDesde.removeAll();
+            panelRecursosDesde.add(dpRecursosDesde, BorderLayout.CENTER);
+        }
+        if (panelRecursosHasta != null) {
+            panelRecursosHasta.removeAll();
+            panelRecursosHasta.add(dpRecursosHasta, BorderLayout.CENTER);
+        }
+        if (panelActividadesDesde != null) {
+            panelActividadesDesde.removeAll();
+            panelActividadesDesde.add(dpActividadesDesde, BorderLayout.CENTER);
+        }
+        if (panelActividadesHasta != null) {
+            panelActividadesHasta.removeAll();
+            panelActividadesHasta.add(dpActividadesHasta, BorderLayout.CENTER);
+        }
     }
 
     public void setController(ControllerEstadisticas controller) {
@@ -41,22 +66,31 @@ public class estadisticasView {
         if (btnCargarActividades != null) {
             btnCargarActividades.addActionListener(e -> controller.cargarActividades());
         }
+
+        // Conexión de los botones de PDF al método print() del controlador
+        if (btnPdfRecursos != null) {
+            btnPdfRecursos.addActionListener(e -> controller.print());
+        }
+
+        if (btnPdfActividades != null) {
+            btnPdfActividades.addActionListener(e -> controller.print());
+        }
     }
 
     // --- GETTERS ---
-    public JPanel getMainPanel() {
-        return mainPanel;
-    }
+    public JPanel getMainPanel() { return mainPanel; }
 
     // Recursos
     public DatePicker getDpRecursosDesde() { return dpRecursosDesde; }
     public DatePicker getDpRecursosHasta() { return dpRecursosHasta; }
     public JTable getTableRecursos() { return tableRecursos; }
     public JPanel getChartRecursos() { return chartRecursos; }
+    public JButton getBtnPdfRecursos() { return btnPdfRecursos; }
 
     // Actividades
     public DatePicker getDpActividadesDesde() { return dpActividadesDesde; }
     public DatePicker getDpActividadesHasta() { return dpActividadesHasta; }
     public JTable getTableActividades() { return tableActividades; }
     public JPanel getChartActividades() { return chartActividades; }
+    public JButton getBtnPdfActividades() { return btnPdfActividades; }
 }
