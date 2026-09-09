@@ -25,6 +25,33 @@ public class categoriasView {
         if (getTxtId() != null) {
             getTxtId().setEditable(false);
         }
+
+        // ========== ASIGNACIÓN DE ICONOS A LOS BOTONES ==========
+        if (buscarButton != null) {
+            buscarButton.setIcon(new ImageIcon(
+                    getClass().getResource("/iconos/search.png")));
+        }
+
+        if (imprimirButton != null) {
+            imprimirButton.setIcon(new ImageIcon(
+                    getClass().getResource("/iconos/pdf.png")));
+        }
+
+        if (guardarButton != null) {
+            guardarButton.setIcon(new ImageIcon(
+                    getClass().getResource("/iconos/save.png")));
+        }
+
+        if (borrarButton != null) {
+            borrarButton.setIcon(new ImageIcon(
+                    getClass().getResource("/iconos/error.png")));
+        }
+
+        if (limpiarButton != null) {
+            limpiarButton.setIcon(new ImageIcon(
+                    getClass().getResource("/iconos/broom.png")));
+        }
+        // ========================================================
     }
 
     private void crearUi() {

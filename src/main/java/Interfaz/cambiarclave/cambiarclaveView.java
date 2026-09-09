@@ -14,6 +14,20 @@ public class cambiarclaveView extends JDialog {
     public cambiarclaveView(Frame parent) {
         super(parent, "Cambiar Contraseña", true); // modal
         setContentPane(mainPanel);
+
+        // ========== ASIGNACIÓN DE ICONOS A LOS BOTONES ==========
+        // Botón Guardar
+        if (btnGuardar != null) {
+            btnGuardar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/save.png")));
+        }
+
+        // Botón Cancelar
+        if (btnCancelar != null) {
+            btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/error.png")));
+        }
+        // ========================================================
+
+
         pack();
         setLocationRelativeTo(parent);
 

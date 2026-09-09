@@ -33,9 +33,22 @@ public class LoginView extends JDialog {
         setContentPane(contentPane);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
+        // ========== ASIGNACIÓN DE ICONOS A LOS BOTONES ==========
+        // Botón Ingresar
         if (ingresarButton != null) {
             ingresarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/door.png")));
         }
+
+        // Botón Cancelar
+        if (btnCancelar != null) {
+            btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/error.png")));
+        }
+
+        // Botón Cambiar Contraseña
+        if (cambiarButton != null) {
+            cambiarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/password.png")));
+        }
+        // ========================================================
 
         configurarEventosBasicos();
         pack();

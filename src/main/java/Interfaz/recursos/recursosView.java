@@ -22,7 +22,34 @@ public class recursosView {
 
     private ControllerRecurso controller;
 
-    public recursosView() {}
+    // ========== CONSTRUCTOR MODIFICADO PARA ASIGNAR ICONOS ==========
+    public recursosView() {
+        // Botón Buscar
+        if (buscarButton != null) {
+            buscarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/search.png")));
+        }
+
+        // Botón Imprimir
+        if (imprimirButton != null) {
+            imprimirButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/pdf.png")));
+        }
+
+        // Botón Guardar (Usa la variable 'Guardar' con G mayúscula)
+        if (Guardar != null) {
+            Guardar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/save.png")));
+        }
+
+        // Botón Limpiar
+        if (limpiarButton != null) {
+            limpiarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/broom.png")));
+        }
+
+        // Botón Borrar
+        if (borrarButton != null) {
+            borrarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/error.png")));
+        }
+    }
+    // ================================================================
 
     public void setController(ControllerRecurso controller) {
         this.controller = controller;

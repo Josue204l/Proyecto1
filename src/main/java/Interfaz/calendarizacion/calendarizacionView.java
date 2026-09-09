@@ -32,10 +32,23 @@ public class calendarizacionView implements PropertyChangeListener {
     private static final DateTimeFormatter FMT_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");
 
+    // ========== CONSTRUCTOR MODIFICADO PARA ASIGNAR ICONOS ==========
     public calendarizacionView() {
         this.datePicker = new DatePicker();
+
+        // Icono para el Botón Cargar / Filtrar
+        if (btnCargar != null) {
+            btnCargar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/reload.png")));
+        }
+
+        // Icono para el Botón Imprimir PDF o Reporte
+        if (btnImprimir != null) {
+            btnImprimir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/pdf.png")));
+        }
+
         configurarListeners();
     }
+    // ================================================================
 
     private void configurarListeners() {
         if (btnCargar != null) {
