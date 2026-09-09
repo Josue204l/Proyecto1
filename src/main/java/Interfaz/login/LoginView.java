@@ -33,6 +33,10 @@ public class LoginView extends JDialog {
         setContentPane(contentPane);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
+        if (ingresarButton != null) {
+            ingresarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/door.png")));
+        }
+
         configurarEventosBasicos();
         pack();
         if (parent != null) {
