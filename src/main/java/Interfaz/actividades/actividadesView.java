@@ -14,7 +14,7 @@ public class actividadesView {
 
     private ControllerActividades controller;
 
-    public actividadesView() {
+    public actividadesView() {  // <---------- progreso hasta ahora, falta actividades y estadísticas de imagenes y faltan los listener de colores
         if (datePicker == null) {
             datePicker = new DatePicker();
         }
