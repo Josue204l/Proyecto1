@@ -37,6 +37,32 @@ public class reservasView {
 
     public reservasView() {
         this.datePickerFecha = new DatePicker();
+
+        // Asignar icono al Botón Extraer (IA)
+        if (extraerButton != null) {
+            extraerButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/AI.png")));
+        }
+
+        // Asignar icono al Botón Reservar / Guardar
+        if (reservasButton != null) {
+            reservasButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/reserve.png")));
+        }
+
+        // Asignar icono al Botón Cancelar Selección
+        if (cancelarReservaSelecionadaButton != null) {
+            cancelarReservaSelecionadaButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/error.png")));
+        }
+
+        // Asignar icono al Botón Limpiar (Usa 'LImpiarButton')
+        if (LImpiarButton != null) {
+            LImpiarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/broom.png")));
+        }
+
+        // Asignar icono al Botón Imprimir PDF
+        if (imprimirButton != null) {
+            imprimirButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/pdf.png")));
+        }
+
         inicializarListaCategorias();
         configurarListeners();
     }

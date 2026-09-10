@@ -42,49 +42,88 @@ public class MainFrame extends JFrame {
         boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol());
         Funcionario funcionarioActual = (usuario instanceof Funcionario) ? (Funcionario) usuario : null;
 
+        // ========== CARGA DE ICONOS PARA LAS PESTAÑAS ==========
+
+        // >>> MODIFICADO: ahora se utiliza el método seguro cargarIcono()
+        ImageIcon icoFuncionarios = cargarIcono("/iconos/case.png");
+        ImageIcon icoCategorias = cargarIcono("/iconos/categories.png");
+        ImageIcon icoRecursos = cargarIcono("/iconos/resource.png");
+        ImageIcon icoReservas = cargarIcono("/iconos/reserves.png");
+        ImageIcon icoCalendarizacion = cargarIcono("/iconos/calendar.png");
+        ImageIcon icoActividades = cargarIcono("/iconos/activities.png");
+        ImageIcon icoEstadisticas = cargarIcono("/iconos/stads.png");
+
+        // ========================================================
+
         if (esAdmin) {
             funcionariosView vFunc = new funcionariosView();
             ModelFuncionario mFunc = new ModelFuncionario();
             new ControllerFuncionario(vFunc, mFunc);
-            tabbedPane.addTab("Funcionarios", vFunc.getMainPanel());
+
+            // >>> MODIFICADO: se agregó icoFuncionarios
+            tabbedPane.addTab("Funcionarios", icoFuncionarios, vFunc.getMainPanel());
 
             categoriasView vCat = new categoriasView();
             ModelCategoria mCat = new ModelCategoria();
             new ControllerCategoria(vCat, mCat);
-            tabbedPane.addTab("Categorías", vCat.getMainPanel());
+
+            // >>> MODIFICADO: se agregó icoCategorias
+            tabbedPane.addTab("Categorías", icoCategorias, vCat.getMainPanel());
 
             recursosView vRec = new recursosView();
             ModelRecurso mRec = new ModelRecurso();
             new ControllerRecurso(vRec, mRec);
-            tabbedPane.addTab("Recursos", vRec.getMainPanel());
+
+            // >>> MODIFICADO: se agregó icoRecursos
+            tabbedPane.addTab("Recursos", icoRecursos, vRec.getMainPanel());
         }
 
         if (!esAdmin && funcionarioActual != null) {
             reservasView vRes = new reservasView();
             new ControllerReserva(vRes, funcionarioActual);
-            tabbedPane.addTab("Mis Reservas", vRes.getMainPanel());
+
+            // >>> MODIFICADO: se agregó icoReservas
+            tabbedPane.addTab("Mis Reservas", icoReservas, vRes.getMainPanel());
         }
 
         calendarizacionView vCal = new calendarizacionView();
         ModelCalendarizacion mCal = new ModelCalendarizacion();
         new ControllerCalendarizacion(vCal, mCal);
-        tabbedPane.addTab("Calendarización", vCal.getMainPanel());
+
+        // >>> MODIFICADO: se agregó icoCalendarizacion
+        tabbedPane.addTab("Calendarización", icoCalendarizacion, vCal.getMainPanel());
 
         actividadesView vAct = new actividadesView();
         ModelActividades mAct = new ModelActividades();
         new ControllerActividades(vAct, mAct);
-        tabbedPane.addTab("Actividades", vAct.getMainPanel());
+
+        // >>> MODIFICADO: se agregó icoActividades
+        tabbedPane.addTab("Actividades", icoActividades, vAct.getMainPanel());
 
         estadisticasView vEst = new estadisticasView();
         ModelEstadisticas mEst = new ModelEstadisticas();
         new ControllerEstadisticas(vEst, mEst);
-        tabbedPane.addTab("Estadísticas", vEst.getMainPanel());
+
+        // >>> MODIFICADO: se agregó icoEstadisticas
+        tabbedPane.addTab("Estadísticas", icoEstadisticas, vEst.getMainPanel());
 
         setJMenuBar(crearMenu(usuario));
         setContentPane(tabbedPane);
         setSize(1100, 760);
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    // >>> AÑADIDO: método para cargar los iconos sin provocar NullPointerException
+    private ImageIcon cargarIcono(String ruta) {
+        java.net.URL recurso = getClass().getResource(ruta);
+
+        if (recurso == null) {
+            System.out.println("No se encontró el icono: " + ruta);
+            return null;
+        }
+
+        return new ImageIcon(recurso);
     }
 
     private JMenuBar crearMenu(Usuario usuario) {

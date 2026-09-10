@@ -54,7 +54,18 @@ public class estadisticasView {
             panelActividadesHasta.removeAll();
             panelActividadesHasta.add(dpActividadesHasta, BorderLayout.CENTER);
         }
+
+        // ========== ASIGNACIÓN DE ICONOS A LOS BOTONES ==========
+        // Botones de Cargar / Filtrar
+        if (btnCargarRecursos != null) {
+            btnCargarRecursos.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/reload.png")));
+        }
+        if (btnCargarActividades != null) {
+            btnCargarActividades.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/reload.png")));
+        }
     }
+
+
 
     public void setController(ControllerEstadisticas controller) {
         this.controller = controller;

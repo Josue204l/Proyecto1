@@ -9,6 +9,7 @@ public class actividadesView {
     private JButton button1;       // Botón de búsqueda / actualización
     private JButton btnImprimir;   // Botón de imprimir PDF
     private JTable table1;
+    private JButton btnCargar;
     private JLabel lblSemana;      // Etiqueta del rango de la semana
     private DatePicker datePicker; // Selector de fecha
 
@@ -20,6 +21,20 @@ public class actividadesView {
         }
         if (lblSemana == null) {
             lblSemana = new JLabel("Semana");
+        }
+
+        // Icono para el boton Cargar
+        if (btnCargar != null) {
+            btnCargar.setIcon(new javax.swing.ImageIcon(
+                    getClass().getResource("/iconos/reload.png")
+            ));
+        }
+
+        // Icono para el boton Imprimir
+        if (btnImprimir != null) {
+            btnImprimir.setIcon(new javax.swing.ImageIcon(
+                    getClass().getResource("/iconos/pdf.png")
+            ));
         }
     }
 

@@ -81,7 +81,7 @@
                   <text value="..."/>
                 </properties>
               </component>
-              <component id="61ca0" class="javax.swing.JButton" default-binding="true">
+              <component id="61ca0" class="javax.swing.JButton" binding="btnImprimir">
                 <constraints>
                   <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
@@ -89,7 +89,7 @@
                   <text value="Imprimir"/>
                 </properties>
               </component>
-              <component id="fb0cf" class="javax.swing.JButton" default-binding="true">
+              <component id="fb0cf" class="javax.swing.JButton" binding="btnCargar">
                 <constraints>
                   <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
