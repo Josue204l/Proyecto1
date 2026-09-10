@@ -120,15 +120,23 @@ public class Data {
     }
 
     private void sembrarUsuariosSiFalta() {
-        boolean hayAdmin = funcionarios.stream().anyMatch(f -> "ADMIN".equalsIgnoreCase(f.getRol()));
-        if (!hayAdmin) {
-            funcionarios.add(new Funcionario("1234", "123", "ADMIN", "Administrador", "2222-0000"));
+
+        Funcionario admin = buscarFuncionario("admin");
+        if (admin == null) {
+            funcionarios.add(new Funcionario("admin", "222", "ADMIN", "Administrador", "2222-0000"));
+        } else {
+            admin.setClave("222");
+            admin.setRol("ADMIN");
         }
-        boolean hayFuncionario = funcionarios.stream()
-                .anyMatch(f -> !"ADMIN".equalsIgnoreCase(f.getRol()));
-        if (!hayFuncionario) {
-            funcionarios.add(new Funcionario("5678", "5678", "FUNCIONARIO", "Ana Pérez", "8888-1234"));
+
+        Funcionario func = buscarFuncionario("111");
+        if (func == null) {
+            funcionarios.add(new Funcionario("111", "111", "FUNCIONARIO", "Funcionario Test", "8888-1234"));
+        } else {
+            func.setClave("111");
+            func.setRol("FUNCIONARIO");
         }
+
         guardarFuncionarios();
     }
 
@@ -156,16 +164,16 @@ public class Data {
             guardarRecursos();
         }
         if (reservas.isEmpty()) {
-            Funcionario ana = buscarFuncionario("5678");
+            Funcionario func = buscarFuncionario("111");
             Recurso sala1 = buscarRecurso("SALA-1");
             Categoria catSala = buscarCategoria("CAT-001");
-            if (ana != null && sala1 != null) {
+            if (func != null && sala1 != null) {
                 LocalDate fecha = LocalDate.now().plusDays(1);
                 Reserva demo = new Reserva("RES-DEMO", "Reunión de coordinación",
                         fecha, LocalTime.of(10, 0), LocalTime.of(12, 0),
                         List.of(sala1),
                         catSala != null ? List.of(catSala) : new ArrayList<>(),
-                        ana);
+                        func);
                 reservas.add(demo);
                 guardarReservas();
             }

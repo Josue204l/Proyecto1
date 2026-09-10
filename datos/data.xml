@@ -2,18 +2,18 @@
 <data>
     <funcionarios>
         <funcionario>
-            <id>_1234</id>
-            <clave>123</clave>
+            <id>admin</id>
+            <clave>222</clave>
             <rol>ADMIN</rol>
             <nombre>Administrador</nombre>
             <telefono>2222-0000</telefono>
             <puesto></puesto>
         </funcionario>
         <funcionario>
-            <id>_5678</id>
-            <clave>5678</clave>
+            <id>_111</id>
+            <clave>111</clave>
             <rol>FUNCIONARIO</rol>
-            <nombre>Ana Pérez</nombre>
+            <nombre>Funcionario Test</nombre>
             <telefono>8888-1234</telefono>
             <puesto></puesto>
         </funcionario>
@@ -51,7 +51,7 @@
         <reserva>
             <id>RES-DEMO</id>
             <titulo>Reunión de coordinación</titulo>
-            <fecha>2026-09-09</fecha>
+            <fecha>2026-09-10</fecha>
             <horaInicio>10:00</horaInicio>
             <horaFin>12:00</horaFin>
             <recursosAsignados>
@@ -60,7 +60,7 @@
             <categoriasRequeridas>
                 <categoria>CAT-001</categoria>
             </categoriasRequeridas>
-            <solicitante>_5678</solicitante>
+            <solicitante>_111</solicitante>
             <estado>ACTIVA</estado>
         </reserva>
     </reservas>
