@@ -29,8 +29,8 @@ public class actividadesView {
         }
 
         // Icono para el boton Cargar
-        if (btnCargar != null) {
-            btnCargar.setIcon(new javax.swing.ImageIcon(
+        if (btnBuscar != null) {
+            btnBuscar.setIcon(new javax.swing.ImageIcon(
                     getClass().getResource("/iconos/reload.png")
             ));
         }
