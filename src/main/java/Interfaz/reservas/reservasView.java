@@ -1,5 +1,8 @@
 package Interfaz.reservas;
 
+import Interfaz.ListHighlighter;
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import com.github.lgooddatepicker.components.DatePicker;
 import logic.Categoria;
 import logic.Service;
@@ -63,7 +66,43 @@ public class reservasView {
             imprimirButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/pdf.png")));
         }
 
+        // CAMBIO: Listener de resaltado para los campos de reservas
+        Highlighter highlighter = new Highlighter();
+
+        if (txtFrase != null) {
+            txtFrase.addMouseListener(highlighter);
+        }
+
+        if (txtActividad != null) {
+            txtActividad.addMouseListener(highlighter);
+        }
+
+        if (txtFecha != null) {
+            txtFecha.addMouseListener(highlighter);
+        }
+
+        if (txtHoraInicio != null) {
+            txtHoraInicio.addMouseListener(highlighter);
+        }
+
+        if (txtHoraFin != null) {
+            txtHoraFin.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de reservas
+        if (tableMisReservas != null) {
+            TableHighlighter tableHighlighter = new TableHighlighter(tableMisReservas);
+            tableHighlighter.instalar();
+        }
+
         inicializarListaCategorias();
+
+        // CAMBIO: Listener de resaltado para la lista de categorias
+        if (listCategorias != null) {
+            ListHighlighter listHighlighter = new ListHighlighter(listCategorias);
+            listHighlighter.instalar();
+        }
+
         configurarListeners();
     }
 

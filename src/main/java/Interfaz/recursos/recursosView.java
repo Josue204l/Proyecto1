@@ -1,5 +1,7 @@
 package Interfaz.recursos;
 
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import logic.Categoria;
 import javax.swing.*;
 
@@ -48,6 +50,36 @@ public class recursosView {
         if (borrarButton != null) {
             borrarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/error.png")));
         }
+
+        // CAMBIO: Listener de resaltado para los campos de recursos
+        Highlighter highlighter = new Highlighter();
+
+        if (category != null) {
+            category.addMouseListener(highlighter);
+        }
+
+        if (descrip != null) {
+            descrip.addMouseListener(highlighter);
+        }
+
+        if (idtext != null) {
+            idtext.addMouseListener(highlighter);
+        }
+
+        if (categorias != null) {
+            categorias.addMouseListener(highlighter);
+        }
+
+        if (descripcion != null) {
+            descripcion.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de recursos
+        if (tablaRecursos != null) {
+            TableHighlighter tableHighlighter = new TableHighlighter(tablaRecursos);
+            tableHighlighter.instalar();
+        }
+
     }
     // ================================================================
 

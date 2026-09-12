@@ -1,5 +1,7 @@
 package Interfaz.actividades;
 
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
@@ -40,6 +42,19 @@ public class actividadesView {
             btnImprimir.setIcon(new javax.swing.ImageIcon(
                     getClass().getResource("/iconos/pdf.png")
             ));
+        }
+
+        // CAMBIO: Listener de resaltado para el campo de fecha
+        Highlighter highlighter = new Highlighter();
+
+        if (textField1 != null) {
+            textField1.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de actividades
+        if (table1 != null) {
+            TableHighlighter tableHighlighter = new TableHighlighter(table1);
+            tableHighlighter.instalar();
         }
     }
 

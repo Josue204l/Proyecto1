@@ -1,5 +1,6 @@
 package Interfaz.login;
 
+import Interfaz.Highlighter;
 import javax.swing.*;
 import java.awt.*;
 
@@ -26,6 +27,11 @@ public class LoginView extends JDialog {
     public LoginView(Frame parent) {
         super(parent, "Inicio de Sesión", true);
 
+        //icono de la ventana de login
+        setIconImage(new javax.swing.ImageIcon(
+                getClass().getResource("/iconos/icono.png")
+        ).getImage());
+
         if (contentPane == null) {
             contentPane = new JPanel();
         }
@@ -34,24 +40,51 @@ public class LoginView extends JDialog {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         // ========== ASIGNACIÓN DE ICONOS A LOS BOTONES ==========
+
         // Botón Ingresar
         if (ingresarButton != null) {
-            ingresarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/door.png")));
+            ingresarButton.setIcon(
+                    new javax.swing.ImageIcon(
+                            getClass().getResource("/iconos/door.png")
+                    )
+            );
         }
 
         // Botón Cancelar
         if (btnCancelar != null) {
-            btnCancelar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/error.png")));
+            btnCancelar.setIcon(
+                    new javax.swing.ImageIcon(
+                            getClass().getResource("/iconos/error.png")
+                    )
+            );
         }
 
         // Botón Cambiar Contraseña
         if (cambiarButton != null) {
-            cambiarButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/password.png")));
+            cambiarButton.setIcon(
+                    new javax.swing.ImageIcon(
+                            getClass().getResource("/iconos/password.png")
+                    )
+            );
         }
+
         // ========================================================
 
+        // CAMBIO: Listener de resaltado para los campos del login
+        Highlighter highlighter = new Highlighter();
+
+        if (txtUsuario != null) {
+            txtUsuario.addMouseListener(highlighter);
+        }
+
+        if (txtClave != null) {
+            txtClave.addMouseListener(highlighter);
+        }
+
         configurarEventosBasicos();
+
         pack();
+
         if (parent != null) {
             setLocationRelativeTo(parent);
         } else {

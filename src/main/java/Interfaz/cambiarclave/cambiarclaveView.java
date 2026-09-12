@@ -1,5 +1,6 @@
 package Interfaz.cambiarclave;
 
+import Interfaz.Highlighter;
 import javax.swing.*;
 import java.awt.*;
 
@@ -27,6 +28,20 @@ public class cambiarclaveView extends JDialog {
         }
         // ========================================================
 
+        // CAMBIO: Listener de resaltado para los campos de contraseña
+        Highlighter highlighter = new Highlighter();
+
+        if (txtClaveActual != null) {
+            txtClaveActual.addMouseListener(highlighter);
+        }
+
+        if (txtClaveNueva != null) {
+            txtClaveNueva.addMouseListener(highlighter);
+        }
+
+        if (txtConfirmacion != null) {
+            txtConfirmacion.addMouseListener(highlighter);
+        }
 
         pack();
         setLocationRelativeTo(parent);

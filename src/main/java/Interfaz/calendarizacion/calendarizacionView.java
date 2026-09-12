@@ -1,5 +1,7 @@
 package Interfaz.calendarizacion;
 
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import com.github.lgooddatepicker.components.DatePicker;
 import logic.Categoria;
 
@@ -37,6 +39,23 @@ public class calendarizacionView implements PropertyChangeListener {
         // Icono para el Botón Imprimir PDF o Reporte
         if (btnImprimir != null) {
             btnImprimir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/pdf.png")));
+        }
+
+        // CAMBIO: Listener de resaltado para los campos de calendarizacion
+        Highlighter highlighter = new Highlighter();
+
+        if (textField1 != null) {
+            textField1.addMouseListener(highlighter);
+        }
+
+        if (comboBox1 != null) {
+            comboBox1.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de calendarizacion
+        if (table1 != null) {
+            TableHighlighter tableHighlighter = new TableHighlighter(table1);
+            tableHighlighter.instalar();
         }
 
         configurarListeners();

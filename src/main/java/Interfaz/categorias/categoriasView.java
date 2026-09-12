@@ -1,5 +1,7 @@
 package Interfaz.categorias;
 
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import utils.UiHelper;
 
 import javax.swing.*;
@@ -49,6 +51,27 @@ public class categoriasView {
                     getClass().getResource("/iconos/broom.png")));
         }
         // ========================================================
+
+        // CAMBIO: Listener de resaltado para los campos de categorías
+        Highlighter highlighter = new Highlighter();
+
+        if (textField1 != null) {
+            textField1.addMouseListener(highlighter);
+        }
+
+        if (textField2 != null) {
+            textField2.addMouseListener(highlighter);
+        }
+
+        if (textField3 != null) {
+            textField3.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de categorías
+        if (table1 != null) {
+            TableHighlighter tableHighlighter = new TableHighlighter(table1);
+            tableHighlighter.instalar();
+        }
     }
 
     public JPanel getMainPanel() {

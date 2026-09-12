@@ -1,5 +1,7 @@
 package Interfaz.estadisticas;
 
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import com.github.lgooddatepicker.components.DatePicker;
 import javax.swing.*;
 import java.awt.*;
@@ -69,6 +71,37 @@ public class estadisticasView {
         }
         if (btnCargarActividades != null) {
             btnCargarActividades.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/reload.png")));
+        }
+
+        // CAMBIO: Listener de resaltado para los selectores de fechas
+        Highlighter highlighter = new Highlighter();
+
+        if (dpRecursosDesde != null) {
+            dpRecursosDesde.addMouseListener(highlighter);
+        }
+
+        if (dpRecursosHasta != null) {
+            dpRecursosHasta.addMouseListener(highlighter);
+        }
+
+        if (dpActividadesDesde != null) {
+            dpActividadesDesde.addMouseListener(highlighter);
+        }
+
+        if (dpActividadesHasta != null) {
+            dpActividadesHasta.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de recursos
+        if (tableRecursos != null) {
+            TableHighlighter tableHighlighterRecursos = new TableHighlighter(tableRecursos);
+            tableHighlighterRecursos.instalar();
+        }
+
+// CAMBIO: Listener de resaltado para la tabla de actividades
+        if (tableActividades != null) {
+            TableHighlighter tableHighlighterActividades = new TableHighlighter(tableActividades);
+            tableHighlighterActividades.instalar();
         }
     }
 

@@ -38,6 +38,11 @@ public class MainFrame extends JFrame {
         super("SISTEMA DE RESERVAS - " + usuario.getId() + " (" + usuario.getRol() + ")");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        //icono para la aplicacion principal
+        setIconImage(new javax.swing.ImageIcon(
+                getClass().getResource("/iconos/resource.png")
+        ).getImage());
+
         JTabbedPane tabbedPane = new JTabbedPane();
         boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol());
         Funcionario funcionarioActual = (usuario instanceof Funcionario) ? (Funcionario) usuario : null;

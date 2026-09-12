@@ -1,5 +1,7 @@
 package Interfaz.funcionarios;
 
+import Interfaz.TableHighlighter;
+import Interfaz.Highlighter;
 import javax.swing.*;
 
 public class funcionariosView {
@@ -57,6 +59,35 @@ public class funcionariosView {
         // Asignar icono al Botón imprimir
         if (button2 != null) {
             button2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/iconos/pdf.png")));
+        }
+
+        // CAMBIO: Listener de resaltado para los campos de funcionarios
+        Highlighter highlighter = new Highlighter();
+
+        if (textField1 != null) {
+            textField1.addMouseListener(highlighter);
+        }
+
+        if (textField2 != null) {
+            textField2.addMouseListener(highlighter);
+        }
+
+        if (textField3 != null) {
+            textField3.addMouseListener(highlighter);
+        }
+
+        if (textField4 != null) {
+            textField4.addMouseListener(highlighter);
+        }
+
+        if (textField5 != null) {
+            textField5.addMouseListener(highlighter);
+        }
+
+        // CAMBIO: Listener de resaltado para la tabla de funcionarios
+        if (table1 != null) {
+            TableHighlighter tableHighlighter = new TableHighlighter(table1);
+            tableHighlighter.instalar();
         }
     }
 
