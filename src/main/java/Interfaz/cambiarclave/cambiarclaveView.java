@@ -1,7 +1,5 @@
 package Interfaz.cambiarclave;
 
-import utils.UiHelper;
-
 import javax.swing.*;
 import java.awt.*;
 
@@ -14,13 +12,10 @@ public class cambiarclaveView extends JDialog {
     private JButton btnCancelar;
 
     public cambiarclaveView(Frame parent) {
-        super(parent, "Cambiar Contraseña", true);
+        super(parent, "Cambiar Contraseña", true); // modal
         setContentPane(mainPanel);
         pack();
         setLocationRelativeTo(parent);
-
-        UiHelper.setIcon(btnGuardar, "save.png");
-        UiHelper.setIcon(btnCancelar, "door.png");
 
         if (btnCancelar != null) {
             btnCancelar.addActionListener(e -> dispose());

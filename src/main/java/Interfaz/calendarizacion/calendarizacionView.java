@@ -2,7 +2,6 @@ package Interfaz.calendarizacion;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import logic.Categoria;
-import utils.UiHelper;
 
 import javax.swing.*;
 import java.beans.PropertyChangeEvent;
@@ -29,8 +28,6 @@ public class calendarizacionView implements PropertyChangeListener {
 
     public calendarizacionView() {
         this.datePicker = new DatePicker();
-        UiHelper.setIcon(btnCargar, "search.png");
-        UiHelper.setIcon(btnImprimir, "pdf.png");
         configurarListeners();
     }
 

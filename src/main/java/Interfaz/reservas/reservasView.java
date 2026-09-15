@@ -3,7 +3,6 @@ package Interfaz.reservas;
 import com.github.lgooddatepicker.components.DatePicker;
 import logic.Categoria;
 import logic.Service;
-import utils.UiHelper;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -39,11 +38,6 @@ public class reservasView {
     public reservasView() {
         this.datePickerFecha = new DatePicker();
         inicializarListaCategorias();
-        UiHelper.setIcon(extraerButton, "check.png");
-        UiHelper.setIcon(reservasButton, "save.png");
-        UiHelper.setIcon(cancelarReservaSelecionadaButton, "error.png");
-        UiHelper.setIcon(LImpiarButton, "broom.png");
-        UiHelper.setIcon(imprimirButton, "pdf.png");
         configurarListeners();
     }
 
