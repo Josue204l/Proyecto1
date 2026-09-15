@@ -29,6 +29,7 @@ import Interfaz.reservas.reservasView;
 import logic.Funcionario;
 import logic.Sesion;
 import logic.Usuario;
+import utils.UiHelper;
 
 import javax.swing.*;
 
@@ -38,50 +39,50 @@ public class MainFrame extends JFrame {
         super("SISTEMA DE RESERVAS - " + usuario.getId() + " (" + (usuario.getRol() != null ? usuario.getRol().toUpperCase() : "") + ")");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        ImageIcon appIcon = UiHelper.icono("icono.png");
+        if (appIcon != null) setIconImage(appIcon.getImage());
+
         JTabbedPane tabbedPane = new JTabbedPane();
         boolean esAdmin = "ADMIN".equalsIgnoreCase(usuario.getRol());
         Funcionario funcionarioActual = (usuario instanceof Funcionario) ? (Funcionario) usuario : null;
 
-        // Pestañas exclusivas para Administrador
         if (esAdmin) {
             funcionariosView vFunc = new funcionariosView();
             ModelFuncionario mFunc = new ModelFuncionario();
             new ControllerFuncionario(vFunc, mFunc);
-            tabbedPane.addTab("Funcionarios", vFunc.getMainPanel());
+            tabbedPane.addTab("Funcionarios", UiHelper.icono("save.png"), vFunc.getMainPanel());
 
             categoriasView vCat = new categoriasView();
             ModelCategoria mCat = new ModelCategoria();
             new ControllerCategoria(vCat, mCat);
-            tabbedPane.addTab("Categorías", vCat.getMainPanel());
+            tabbedPane.addTab("Categorías", UiHelper.icono("broom.png"), vCat.getMainPanel());
 
             recursosView vRec = new recursosView();
             ModelRecurso mRec = new ModelRecurso();
             new ControllerRecurso(vRec, mRec);
-            tabbedPane.addTab("Recursos", vRec.getMainPanel());
+            tabbedPane.addTab("Recursos", UiHelper.icono("search.png"), vRec.getMainPanel());
         }
 
-        // Pestaña exclusiva para Funcionario
         if (!esAdmin && funcionarioActual != null) {
             reservasView vRes = new reservasView();
             new ControllerReserva(vRes, funcionarioActual);
-            tabbedPane.addTab("Mis Reservas", vRes.getMainPanel());
+            tabbedPane.addTab("Mis Reservas", UiHelper.icono("check.png"), vRes.getMainPanel());
         }
 
-        // Pestañas compartidas (Administrador y Funcionario)
         calendarizacionView vCal = new calendarizacionView();
         ModelCalendarizacion mCal = new ModelCalendarizacion();
         new ControllerCalendarizacion(vCal, mCal);
-        tabbedPane.addTab("Calendarización", vCal.getMainPanel());
+        tabbedPane.addTab("Calendarización", UiHelper.icono("search.png"), vCal.getMainPanel());
 
         actividadesView vAct = new actividadesView();
         ModelActividades mAct = new ModelActividades();
         new ControllerActividades(vAct, mAct);
-        tabbedPane.addTab("Actividades", vAct.getMainPanel());
+        tabbedPane.addTab("Actividades", UiHelper.icono("search.png"), vAct.getMainPanel());
 
         estadisticasView vEst = new estadisticasView();
         ModelEstadisticas mEst = new ModelEstadisticas();
         new ControllerEstadisticas(vEst, mEst);
-        tabbedPane.addTab("Estadísticas", vEst.getMainPanel());
+        tabbedPane.addTab("Estadísticas", UiHelper.icono("pdf.png"), vEst.getMainPanel());
 
         setJMenuBar(crearMenu(usuario));
         setContentPane(tabbedPane);

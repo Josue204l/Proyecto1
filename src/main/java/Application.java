@@ -14,7 +14,9 @@ public class Application {
                 UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
             } catch (Exception ignored) {}
 
-            doLogin();
+            if (!Sesion.isLoggedIn()) {
+                doLogin();
+            }
 
             if (Sesion.isLoggedIn()) {
                 doRun();

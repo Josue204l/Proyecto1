@@ -1,6 +1,7 @@
 package Interfaz.recursos;
 
 import logic.Categoria;
+import utils.UiHelper;
 import javax.swing.*;
 
 public class recursosView {
@@ -22,7 +23,13 @@ public class recursosView {
 
     private ControllerRecurso controller;
 
-    public recursosView() {}
+    public recursosView() {
+        UiHelper.setIcon(buscarButton, "search.png");
+        UiHelper.setIcon(imprimirButton, "pdf.png");
+        UiHelper.setIcon(Guardar, "save.png");
+        UiHelper.setIcon(borrarButton, "error.png");
+        UiHelper.setIcon(limpiarButton, "broom.png");
+    }
 
     public void setController(ControllerRecurso controller) {
         this.controller = controller;

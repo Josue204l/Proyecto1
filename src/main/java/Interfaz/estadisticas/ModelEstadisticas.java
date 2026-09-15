@@ -77,6 +77,18 @@ public class ModelEstadisticas {
         Map<String, Integer> conteo = new LinkedHashMap<>();
         WeekFields wf = WeekFields.of(Locale.getDefault());
 
+        // Pre-poblar todas las semanas del período con 0
+        if (desde != null && hasta != null) {
+            LocalDate cursor = desde;
+            while (!cursor.isAfter(hasta)) {
+                int semana = cursor.get(wf.weekOfWeekBasedYear());
+                int anio = cursor.get(wf.weekBasedYear());
+                String clave = "Semana " + semana + " (" + anio + ")";
+                conteo.putIfAbsent(clave, 0);
+                cursor = cursor.plusWeeks(1);
+            }
+        }
+
         for (Reserva r : Data.getInstancia().getReservas()) {
             if ("CANCELADA".equalsIgnoreCase(r.getEstado())) continue;
             if (r.getFecha() == null) continue;
@@ -89,12 +101,12 @@ public class ModelEstadisticas {
             conteo.put(clave, conteo.getOrDefault(clave, 0) + 1);
         }
 
-        // Crear filas para el gráfico
         List<EstadisticaFila> resultado = new ArrayList<>();
         conteo.forEach((etiqueta, cantidad) -> resultado.add(new EstadisticaFila(etiqueta, cantidad)));
 
-        // Actualizar la JTable de Actividades
-        List<String[]> filasTabla = conteo.entrySet().stream().map(e -> new String[]{e.getKey(), String.valueOf(e.getValue())}).collect(Collectors.toList());
+        List<String[]> filasTabla = conteo.entrySet().stream()
+                .map(e -> new String[]{e.getKey(), String.valueOf(e.getValue())})
+                .collect(Collectors.toList());
         tableModelActividades.setFilasGenericas(filasTabla, new String[]{"Semana", "Cantidad de Actividades"});
 
         propertyChangeSupport.firePropertyChange(LISTA, null, resultado);

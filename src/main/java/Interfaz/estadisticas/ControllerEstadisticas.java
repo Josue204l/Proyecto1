@@ -91,92 +91,81 @@ public class ControllerEstadisticas {
         }
     }
 
-    /**
-     * Genera el PDF usando iText 7 y la clase auxiliar utils.PDFGenerator
-     */
     public void print() {
+        printRecursos();
+    }
+
+    public void printRecursos() {
         if (view == null) return;
-
         try {
-            // 1. Obtener rango de fechas de Recursos o Actividades
-            LocalDate[] rango;
-            try {
-                rango = leerRango(view.getDpRecursosDesde(), view.getDpRecursosHasta());
-            } catch (Exception e) {
-                rango = leerRango(view.getDpActividadesDesde(), view.getDpActividadesHasta());
-            }
+            LocalDate[] rango = leerRango(view.getDpRecursosDesde(), view.getDpRecursosHasta());
+            String dest = elegirArchivo("Reporte_Recursos.pdf");
+            if (dest == null) return;
 
-            // 2. Seleccionar dónde guardar el archivo
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Guardar Reporte PDF");
-            fileChooser.setSelectedFile(new File("Reporte_Estadisticas.pdf"));
-
-            int userSelection = fileChooser.showSaveDialog(view.getMainPanel());
-            if (userSelection != JFileChooser.APPROVE_OPTION) {
-                return;
-            }
-
-            String dest = fileChooser.getSelectedFile().getAbsolutePath();
-            if (!dest.toLowerCase().endsWith(".pdf")) {
-                dest += ".pdf";
-            }
-
-            // 3. Crear el documento PDF con iText 7
             PdfWriter writer = new PdfWriter(dest);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            // Título
-            Paragraph titulo = new Paragraph("REPORTE DE ESTADÍSTICAS").setBold().setFontSize(16);
-            document.add(titulo);
-
-            Paragraph rangoFechas = new Paragraph("Rango de Fechas: " + rango[0] + " a " + rango[1]);
-            document.add(rangoFechas);
+            document.add(new Paragraph("REPORTE DE RECURSOS RESERVADOS").setBold().setFontSize(16));
+            document.add(new Paragraph("Período: " + rango[0] + " a " + rango[1]));
             document.add(new Paragraph("\n"));
 
-            // --- TABLA DE RECURSOS ---
-            document.add(new Paragraph("Recursos Reservados").setBold());
-            List<EstadisticaFila> recursos = model.calcularRecursos(rango[0], rango[1]);
-
-            Table tablaRecursos = new Table(UnitValue.createPercentArray(new float[]{70, 30}));
-            tablaRecursos.useAllAvailableWidth();
-
-            // Encabezados usando PDFGenerator.getCell
-            tablaRecursos.addHeaderCell(PDFGenerator.getCell(new Paragraph("Categoría").setBold(), 0, true));
-            tablaRecursos.addHeaderCell(PDFGenerator.getCell(new Paragraph("Cantidad").setBold(), 0, true));
-
-            for (EstadisticaFila f : recursos) {
-                tablaRecursos.addCell(PDFGenerator.getCell(new Paragraph(f.getEtiqueta()), 0, true));
-                tablaRecursos.addCell(PDFGenerator.getCell(new Paragraph(String.valueOf(f.getCantidad())), 0, true));
+            List<EstadisticaFila> filas = model.calcularRecursos(rango[0], rango[1]);
+            Table tabla = new Table(UnitValue.createPercentArray(new float[]{70, 30}));
+            tabla.useAllAvailableWidth();
+            tabla.addHeaderCell(PDFGenerator.getCell(new Paragraph("Categoría").setBold(), 0, true));
+            tabla.addHeaderCell(PDFGenerator.getCell(new Paragraph("Cantidad").setBold(), 0, true));
+            for (EstadisticaFila f : filas) {
+                tabla.addCell(PDFGenerator.getCell(new Paragraph(f.getEtiqueta()), 0, true));
+                tabla.addCell(PDFGenerator.getCell(new Paragraph(String.valueOf(f.getCantidad())), 0, true));
             }
-            document.add(tablaRecursos);
-            document.add(new Paragraph("\n"));
-
-            // --- TABLA DE ACTIVIDADES ---
-            document.add(new Paragraph("Actividades por Semana").setBold());
-            List<EstadisticaFila> actividades = model.calcularActividades(rango[0], rango[1]);
-
-            Table tablaActividades = new Table(UnitValue.createPercentArray(new float[]{70, 30}));
-            tablaActividades.useAllAvailableWidth();
-
-            // Encabezados
-            tablaActividades.addHeaderCell(PDFGenerator.getCell(new Paragraph("Semana").setBold(), 0, true));
-            tablaActividades.addHeaderCell(PDFGenerator.getCell(new Paragraph("Cantidad").setBold(), 0, true));
-
-            for (EstadisticaFila f : actividades) {
-                tablaActividades.addCell(PDFGenerator.getCell(new Paragraph(f.getEtiqueta()), 0, true));
-                tablaActividades.addCell(PDFGenerator.getCell(new Paragraph(String.valueOf(f.getCantidad())), 0, true));
-            }
-            document.add(tablaActividades);
-
+            document.add(tabla);
             document.close();
-
-            // 4. Abrir el PDF automáticamente usando utils.PDFGenerator
             PDFGenerator.openPdf(dest);
-
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(view.getMainPanel(), "Error al generar el reporte PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Error al generar PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public void printActividades() {
+        if (view == null) return;
+        try {
+            LocalDate[] rango = leerRango(view.getDpActividadesDesde(), view.getDpActividadesHasta());
+            String dest = elegirArchivo("Reporte_Actividades.pdf");
+            if (dest == null) return;
+
+            PdfWriter writer = new PdfWriter(dest);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            document.add(new Paragraph("REPORTE DE ACTIVIDADES POR SEMANA").setBold().setFontSize(16));
+            document.add(new Paragraph("Período: " + rango[0] + " a " + rango[1]));
+            document.add(new Paragraph("\n"));
+
+            List<EstadisticaFila> filas = model.calcularActividades(rango[0], rango[1]);
+            Table tabla = new Table(UnitValue.createPercentArray(new float[]{70, 30}));
+            tabla.useAllAvailableWidth();
+            tabla.addHeaderCell(PDFGenerator.getCell(new Paragraph("Semana").setBold(), 0, true));
+            tabla.addHeaderCell(PDFGenerator.getCell(new Paragraph("Cantidad").setBold(), 0, true));
+            for (EstadisticaFila f : filas) {
+                tabla.addCell(PDFGenerator.getCell(new Paragraph(f.getEtiqueta()), 0, true));
+                tabla.addCell(PDFGenerator.getCell(new Paragraph(String.valueOf(f.getCantidad())), 0, true));
+            }
+            document.add(tabla);
+            document.close();
+            PDFGenerator.openPdf(dest);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(view.getMainPanel(), "Error al generar PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private String elegirArchivo(String nombreDefault) {
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Guardar Reporte PDF");
+        fc.setSelectedFile(new File(nombreDefault));
+        if (fc.showSaveDialog(view.getMainPanel()) != JFileChooser.APPROVE_OPTION) return null;
+        String dest = fc.getSelectedFile().getAbsolutePath();
+        return dest.toLowerCase().endsWith(".pdf") ? dest : dest + ".pdf";
     }
 
     private LocalDate[] leerRango(DatePicker desdeCampo, DatePicker hastaCampo) throws Exception {

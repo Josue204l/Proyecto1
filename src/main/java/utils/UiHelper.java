@@ -3,10 +3,26 @@ package utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.net.URL;
 
 public final class UiHelper {
 
     private UiHelper() {}
+
+    public static ImageIcon icono(String nombre) {
+        URL url = UiHelper.class.getResource("/iconos/" + nombre);
+        return url != null ? new ImageIcon(url) : null;
+    }
+
+    public static void setIcon(AbstractButton boton, String nombre) {
+        if (boton == null) return;
+        ImageIcon img = icono(nombre);
+        if (img != null) boton.setIcon(img);
+    }
+
+    public static boolean existeImagen(String nombre) {
+        return UiHelper.class.getResource("/iconos/" + nombre) != null;
+    }
 
     public static void bind(AbstractButton boton, ActionListener listener) {
         if (boton == null || listener == null) return;

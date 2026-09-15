@@ -18,6 +18,10 @@ public class XmlPersister {
     private static XmlPersister theInstance;
     private final String path;
 
+    public static void establecerInstanciaParaPruebas(XmlPersister persister) {
+        theInstance = persister;
+    }
+
     public static XmlPersister instance() {
         if (theInstance == null) {
             theInstance = new XmlPersister("datos/data.xml");

@@ -1,9 +1,9 @@
 package Interfaz.reservas;
 
-import data.Data;
 import logic.Categoria;
 import logic.Recurso;
 import logic.Reserva;
+import logic.Service;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -49,7 +49,7 @@ public class ModelReserva {
     public TableModelReserva getTableModel() { return tableModel; }
 
     public List<Reserva> getReservas() {
-        return Data.getInstancia().getReservas();
+        return Service.instance().getReservas();
     }
 
     public List<Reserva> getReservasDelFuncionario() {
@@ -64,65 +64,13 @@ public class ModelReserva {
         propertyChangeSupport.firePropertyChange(LISTA, null, getReservasDelFuncionario());
     }
 
-    public List<Recurso> asignarRecursosDisponibles(List<Categoria> categorias, LocalDate fecha, LocalTime inicio, LocalTime fin) throws Exception {
-        List<Recurso> asignados = new ArrayList<>();
-        List<String> noDisponibles = new ArrayList<>();
-
-        for (Categoria cat : categorias) {
-            Recurso recursoEncontrado = null;
-
-            for (Recurso r : Data.getInstancia().getRecursos()) {
-                boolean yaAsignadoEnEstaReserva = asignados.stream().anyMatch(a -> a.getId().equals(r.getId()));
-                if (yaAsignadoEnEstaReserva) continue;
-
-                if (r.getCategoria() != null && r.getCategoria().getId().equals(cat.getId())) {
-                    boolean libre = true;
-                    for (Reserva res : getReservas()) {
-                        if (res.isActiva() && fecha.equals(res.getFecha())) {
-                            boolean solapaHorario = inicio.isBefore(res.getHoraFin()) && res.getHoraInicio().isBefore(fin);
-                            if (solapaHorario && res.usaRecurso(r.getId())) {
-                                libre = false;
-                                break;
-                            }
-                        }
-                    }
-                    if (libre) {
-                        recursoEncontrado = r;
-                        break;
-                    }
-                }
-            }
-
-            if (recursoEncontrado != null) {
-                asignados.add(recursoEncontrado);
-            } else {
-                noDisponibles.add(cat.getEtiqueta());
-            }
-        }
-
-        if (!noDisponibles.isEmpty()) {
-            throw new Exception("Sin disponibilidad para las categorías: " + String.join(", ", noDisponibles));
-        }
-
-        return asignados;
+    public List<Recurso> asignarRecursosDisponibles(List<Categoria> categorias, LocalDate fecha,
+                                                      LocalTime inicio, LocalTime fin) throws Exception {
+        return logic.Service.instance().asignarRecursosDisponibles(categorias, fecha, inicio, fin);
     }
 
     public void guardar(Reserva reserva) throws Exception {
-        List<Reserva> lista = Data.getInstancia().getReservas();
-        int index = -1;
-        for (int i = 0; i < lista.size(); i++) {
-            if (lista.get(i).getId().equals(reserva.getId())) {
-                index = i;
-                break;
-            }
-        }
-        if (index >= 0) {
-            lista.set(index, reserva);
-        } else {
-            lista.add(reserva);
-        }
-
-        Data.getInstancia().guardarReservas();
+        logic.Service.instance().guardarReserva(reserva);
         refrescarTabla();
     }
 
@@ -138,18 +86,9 @@ public class ModelReserva {
     }
 
     public boolean cancelar(String id) throws Exception {
-        Reserva reserva = buscarPorId(id);
-        if (reserva == null) return false;
-        if (!reserva.isActiva()) {
-            throw new Exception("La reserva ya no está activa.");
-        }
-        if (!reserva.esFutura()) {
-            throw new Exception("Solo se pueden cancelar reservas futuras.");
-        }
-        reserva.setEstado("CANCELADA");
-        Data.getInstancia().guardarReservas();
+        boolean resultado = logic.Service.instance().cancelarReserva(id);
         refrescarTabla();
-        return true;
+        return resultado;
     }
 
     public boolean eliminar(String id) {

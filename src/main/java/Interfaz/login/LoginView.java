@@ -1,22 +1,21 @@
 package Interfaz.login;
 
+import utils.UiHelper;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class LoginView extends JDialog {
 
-    // Paneles principales según el .form
     private JPanel contentPane;
     private JPanel icono;
     private JPanel panel;
 
-    // Campos de texto y etiquetas
     private JTextField txtUsuario;
     private JPasswordField txtClave;
     private JLabel ID;
     private JLabel Clave;
 
-    // Botones según los bindings del .form
     private JButton ingresarButton;
     private JButton btnCancelar;
     private JButton cambiarButton;
@@ -33,13 +32,16 @@ public class LoginView extends JDialog {
         setContentPane(contentPane);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
+        ImageIcon appIcon = UiHelper.icono("icono.png");
+        if (appIcon != null) setIconImage(appIcon.getImage());
+
+        UiHelper.setIcon(ingresarButton, "check.png");
+        UiHelper.setIcon(btnCancelar, "door.png");
+        UiHelper.setIcon(cambiarButton, "password.png");
+
         configurarEventosBasicos();
         pack();
-        if (parent != null) {
-            setLocationRelativeTo(parent);
-        } else {
-            setLocationRelativeTo(null);
-        }
+        setLocationRelativeTo(parent != null ? parent : null);
     }
 
     private void configurarEventosBasicos() {

@@ -1,6 +1,7 @@
 package Interfaz.actividades;
 
 import com.github.lgooddatepicker.components.DatePicker;
+import utils.UiHelper;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -21,12 +22,10 @@ public class actividadesView {
     private ControllerActividades controller;
 
     public actividadesView() {
-        if (datePicker == null) {
-            datePicker = new DatePicker();
-        }
-        if (lblSemana == null) {
-            lblSemana = new JLabel("Semana");
-        }
+        if (datePicker == null) datePicker = new DatePicker();
+        if (lblSemana == null) lblSemana = new JLabel("Semana");
+        UiHelper.setIcon(btnBuscar, "search.png");
+        UiHelper.setIcon(btnImprimir, "pdf.png");
     }
 
     public void setController(ControllerActividades controller) {

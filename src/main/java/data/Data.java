@@ -120,24 +120,18 @@ public class Data {
     }
 
     private void sembrarUsuariosSiFalta() {
-
-        Funcionario admin = buscarFuncionario("admin");
-        if (admin == null) {
+        if (buscarFuncionario("admin") == null) {
             funcionarios.add(new Funcionario("admin", "222", "ADMIN", "Administrador", "2222-0000"));
-        } else {
-            admin.setClave("222");
-            admin.setRol("ADMIN");
+            guardarFuncionarios();
         }
-
-        Funcionario func = buscarFuncionario("111");
-        if (func == null) {
+        if (buscarFuncionario("111") == null) {
             funcionarios.add(new Funcionario("111", "111", "FUNCIONARIO", "Funcionario Test", "8888-1234"));
-        } else {
-            func.setClave("111");
-            func.setRol("FUNCIONARIO");
+            guardarFuncionarios();
         }
+    }
 
-        guardarFuncionarios();
+    public static void establecerInstanciaParaPruebas(Data data) {
+        instancia = data;
     }
 
     private void sembrarCatalogoSiFalta() {
